@@ -1,0 +1,70 @@
+#!/bin/bash
+########################################################################
+## pinSetup.sh
+## Author: Todd Sukolsky
+## Copyright of Todd Sukolsky and Re.Cycle
+## Date Created: 2/9/13
+## Last Revices: 2/9/13
+########################################################################
+## Description:
+##    This script prepares all pins and ports needed for use on the 
+## BeagleBone. If you specify the option to '-b', it will blink an LED.
+## This is unneeded funtionally though. Note the pin, mode, and echo value
+## for the UART and pin assignments. Also, not that these echo values
+## are in HEX.
+##
+########################################################################
+## Revisions:
+##
+########################################################################
+
+###################################################################################################
+## Setup BeagleBone UART1 : BB P9, pin 24 -> UART1_TXD -> Watchdog_AVR_rxd
+#
+echo 8 > /sys/kernel/debug/omap_mux/uart1_txd
+
+####################################################################################################
+## Setup BeagleBone UART1 : BB P9, pin 26 -> UART1_RXD -> Watchdog_AVR_txd
+#
+echo 28 > /sys/kernel/debug/omap_mux/uart1_rxd
+
+####################################################################################################
+## Setup BeagleBone UART2 : BB P9, pin 21 -> UART2_TXD -> GPS_RXD (mode 1)
+#
+echo 9 > /sys/kernel/debug/omap_mux/spi0_d0
+
+###################################################################################################
+## Setup BeagleBone UART2 : BB P9, pin 22 -> UART2_RXD -> GPS_TXD (mode 1)
+#
+echo 39 > /sys/kernel/debug/omap_mux/spi0_sclk 
+
+##################################################################################################
+## Setup BeagleBone UART4 : BB P9, pin 11 -> UART4_RXD -> GAVR_TXD (mode 
+#
+echo 2e > /sys/kernel/debug/omap_mux/gpmc_wait0
+
+##################################################################################################
+## Setup BeagleBone UART4 : BB P9, pin 13 -> UART4_TXD -> GAVR_RXD (mode 
+#
+echo e > /sys/kernel/debug/omap_mux/gpmc_wpn
+
+###################################################################################################
+## BeagleBone P9, pin 4 -> GPIO1_7 (32+9) -> PCINT0 on GAVR
+#
+#setup mode
+echo f > /sys/kernel/debug/omap_mux/gpmc_ad7	
+#setup actual GPIO
+echo 39 > /sys/class/gpio/export
+echo "low" > /sys/class/gpio/gpio39/direction
+
+###################################################3################################################
+##  BeagleBone P8, pin 3 -> GPIO1_6 (32+8) -> INT2 on WAVR
+#
+#setup mode
+echo f > /sys/kernel/debug/omap_mux/gpmc_ad6
+#setup actual GPIO
+echo 38 > /sys/class/gpio/export
+echo "low" > /sys/class/gpio/gpio38/direction
+
+exit
+
