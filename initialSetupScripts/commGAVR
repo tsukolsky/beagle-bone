@@ -1,29 +1,23 @@
 #!/usr/bin/python
 
-##Test script for softSetup
-#!/usr/bin/python
+##Test script for GAVR
 ###############################################################
-## setup.py
+## testGAVR.py
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013
-## Last Revised: 2/9/2013
+## Last Revised: 3/31/2013
 ###############################################################
 ## Description:
-##    This module is responisble for setting the Watchdog AVR's
-## time in the case that there is a valid time stamp from the 
-## NMEA strings of the GPS. Date is not preserved and must be
-## user provided in the case of a complete system halt. This
-## module will establish a connection, send the string that is
-## stored in a remote file to the watchdog avr. It will then exit.
+##    This module is responisble for communication between the GAVR
+## and the BeagleBone
+###############################################################
+## Revisions:	
+##	3/31- Tweaked funciontality to work with current model.
 ##
 ###############################################################
 ## Changes to be made:
-##     Probably going to add an outer loop for the send function;
-## Every 30 seconds, if no time is set, loop through the function
-## looking for valid GPS strings. Once one is good, then proceed.
-## This will mean we can integrate initTime.py with setup.py
-##
+##     
 ###############################################################
 
 import time
@@ -36,7 +30,7 @@ import optparse
 inputString=''
 askUser=False
 
-use = "Usage: %prog [options] <arguments>"
+use = "Usage: %prog [options] <arguments>. String entered must have '.' to terminate."
 parser = optparse.OptionParser(usage=use)
 parser.add_option('-s', dest='inString', help='String to be sent, real mode')
 parser.add_option('-D',action="store_true", dest="debug",default=False,help='User String for debug mode')
@@ -60,29 +54,32 @@ else:
 def setupConnection():
 	#Setup communication line with board, Alert the Watchdog we are about to ask for something
 	sendInterrupt()
-	#Get ACKT
+	#Get ACKB
 	settingUp=True
 	start=time.time()
 	while settingUp:
-	    if (time.time()-start)<2:		    #Sets timeout to 2 seconds, less than half of actual timeout on AVR
+	    if (time.time()-start)<3:		    #Sets timeout to 2 seconds, less than half of actual timeout on AVR
                 ack=getString(100.0/1000.0)    
-                if (ack=='ACKT'):
+                if (ack=='ACKB.'):
 		    return True
 	        elif ack!='' or ack!=' ':
 		    print '--' + ack + '--'
             else:					#Took to long, chip might be talking to graphics avr, shouldnt be though...wait for timeout to occur then retry
-		time.sleep(6)				#Timeout on AVR is 5 seconds
+		time.sleep(3)				#Timeout on AVR is 5 seconds
 		sendInterrupt()				#send interrupt, reset start for new timeout
 		start=time.time()
 
 	return False
 
 #### Send Time Routine ####
-def sendTime(theString,stopOnOne):	
+def sendTime(theString,stopOnOne):			#stopOnOne==askUser
 	#Got ack, time to send time string good or bad
 	communicating=True
 	start=time.time()
-	oString=theString
+	if stopOnOne:
+		oString=theString
+	else:
+		oString='SYN'+theString
 	sendString(oString)
 	ack=''
 	while communicating:
@@ -90,24 +87,29 @@ def sendTime(theString,stopOnOne):
 			communicating=False
 			
 		if (time.time()-start)<4 and ack=='':		#longer timeout, only 2 from first + 4 now is full
-                        ack=getString(100.0/1000.0)     #check every 100ms	
-			ackCompare='ACK'+oString[0:-1]
+                        ack=getString(100.0/1000.0)     	#check every 100ms	
+			ackCompare='ACK'+oString		#has '.' init.
 			if (ack==ackCompare):
 				print '--'+ack
 				communicating=False
-			elif (ack=='ACKbad'):
-				hour=int(oString[0:2])
-				minute=int(oString[3:5])
-				second=int(oString[6:8])
+			elif (ack=='ACKBAD.'):
+				if stopOnOne:
+					hour=int(oString[0:2])
+					minute=int(oString[3:5])
+					second=int(oString[6:8])
+				else:
+					hour=int(oString[3:5])
+					minute=int(oString[6:8])
+					second=int(oString[9:11])
+				
 				if (hour/24==0) and (minute/60==0) and (second/60==0):
-					time.sleep(6) 
-					sendInterrupt()
-					sendString(oString)
-				        communicating=True
+					return False
 				else:
 					communicating=False
 					return True
-                        elif (ack=='ACKT'):
+                        elif (ack=='ACKB.'):
+				return False
+			elif (ack=='ACKERROR.'):
 				return False
 
 	        else:		#we probably just had a timeout, setup the connection again
@@ -117,14 +119,14 @@ def sendTime(theString,stopOnOne):
 
 #### Send Interrupt Routine ####
 def sendInterrupt():
-	os.system("echo \"high\" > /sys/class/gpio/gpio38/direction")
-	os.system("echo \"low\" > /sys/class/gpio/gpio38/direction")
+	os.system("echo \"high\" > /sys/class/gpio/gpio39/direction")
+	os.system("echo \"low\" > /sys/class/gpio/gpio39/direction")
 
 #### Send String Routine ####
 def sendString(STRING):
 	for char in STRING:
 		serPort.write(char)
-		time.sleep(25.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
+		time.sleep(25.0/1000.0)
 	
 #### Get String Routine ####
 def getString(waitTime):
@@ -140,14 +142,14 @@ def getString(waitTime):
 #####################   Main Program   #############################
 ####################################################################
 
-#Initializations for the serial port
-serialPort='/dev/ttyO1'
+#Initializations for the serial port. Bone communicates on UART4, GAVR on UART0
+serialPort='/dev/ttyO4'
 baudRate=9600
 
 #Declare file i/o variables
 logFile='/home/root/tmp/logs/startupLog.txt'
 
-#logFile='/home/todd/Documents/BoneDev/customFiles/startupLog.txt'		#what we are going to print to for log
+#logFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/startupLog.txt'		#what we are going to print to for log
 try:
     outputSuccess=open(logFile,'a')
 except:
@@ -183,8 +185,5 @@ while not sent:
 		sent=sendTime(setString,askUser)
 		if not sent:
 			connectionSet=False
-
-
-#Write to a log that I am done
-outputSuccess.write("init_time...DONE\n")
+# Exit
 exit()

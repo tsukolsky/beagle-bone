@@ -4,7 +4,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013
-## Last Revised: 2/9/2013
+## Last Revised: 3/31/2013
 ###############################################################
 ## Description:
 ##    This module is responisble for piping the raw NMEA strings
@@ -14,6 +14,9 @@
 ###############################################################
 ## Changes to be made:
 ##	Which files are actually being wrriten to and such
+###############################################################
+## Revisions:
+##	Changed which device is used by default.
 ###############################################################
 
 import time
@@ -32,7 +35,7 @@ parser.add_option('-d', '--debug', dest='debug',help='Debug Option')
 (options, args) = parser.parse_args()
 
 if options.device is None:
-  	options.device='/dev/ttyO4'
+  	options.device='/dev/ttyO2'
 if options.baud is None:
     	options.baud=int(9600)
 if options.debug is None:
@@ -42,7 +45,7 @@ if options.debug is None:
 #########################   	Method for placing Time 	###########################
 ###########################################################################################
 def placeTime(timeString):
-	WRITEFILE='/home/todd/Documents/BoneDev/customFiles/NMEA/initTime.txt'
+	WRITEFILE='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/initTime.txt'
 	#WRITEFILE='/home/root/nmea/savedTimeFile.txt'
 	
 	#Parse the time, then alert the sendTime script that it needs to execute.
@@ -50,14 +53,17 @@ def placeTime(timeString):
 
 	gotTime=False	#default
 	#Split the string
-	stuff=timeString.split(',')
-	if (timeString.find('GPGGA') != -1) and (int(stuff[6]) != 0):	#found it, valid, save latest data
-		time=stuff[1]
-		#Initiate program for communication with the Watchdog_AVR with the new time.
+	fields=timeString.split(',')
+	if (timeString.find('GPRMC') != -1) and (stuff[2]) == 'A'):	#found it, valid, save latest data
+		time=fields[1]
+		date=fields[9]			
+		dmy=date[2:4]+','+date[:2]+',20'+date[4:6]
 		hms=str(int(time[:2])-5)+':'+time[2:4]+':'+time[4:6]		#converts from UTC to EST
-		logFile.write(hms+'\n')
-		#os.system('./sendTime -s '+hms) #put the binary sendTime in the /bin folder.
-		print 'Time is ' + hms
+		#Initiate program for communication with the Watchdog_AVR with the new time.
+		sendString=hms+'/'+dmy+'.'		
+		logFile.write(sendString+'\n')
+		#os.system('./sendTime -s '+sendString) #put the binary sendTime in the /bin folder.
+		print 'Time and date is '+sendString
 		return False
  	else:
 		logFile.write('NONE\n')	#don't need to initiate sending routine.
@@ -77,7 +83,7 @@ def placeTime(timeString):
 
 #Declare where the NMEA strings are going to be written
 #nmeaFile='/tmp/nmea/raw_strings.txt'
-nmeaFile='/home/todd/Documents/BoneDev/customFiles/NMEA/raw_strings_dev.txt'
+nmeaFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/raw_strings_dev.txt'
 hnmeaFile=open(nmeaFile,'w')	#we are appending to this file
 
 ## Open serial connection that is going to be used for GPS
@@ -126,11 +132,11 @@ while noError:
 				
 
 			currentString=''				#reset string
-		elif char!='\00' and char != ' ':	#no new line, just another character, add to string
+		elif char!='\00' and char != ' ':			#no new line, just another character, add to string
 			currentString+= char	
 			
-		if stringsWrittenThisSection >= 8:
-			time.sleep(8)
+		if stringsWrittenThisSection >= 15:
+			time.sleep(5)
 			timeSlept+=1 
 	                stringsWrittenThisSection=0  
 
