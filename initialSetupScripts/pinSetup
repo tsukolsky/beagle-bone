@@ -117,7 +117,7 @@ echo "low" > /sys/class/gpio/gpio67/direction
 ##  BeagleBone P8, pin 9 -> GPIO2_5 (64+5) -> WIO0/BB8_9
 #
 #setup mode
-echo f > /sys/kernel/debug/omap_mux/gpmc_be0n_cle
+echo f > /sys/kernel/debug/omap_mux/gpmc_ben0_cle
 #setup actual GPIO
 echo 69 > /sys/class/gpio/export
 echo "low" > /sys/class/gpio/gpio69/direction
@@ -183,7 +183,7 @@ echo "low" > /sys/class/gpio/gpio47/direction
 echo f > /sys/kernel/debug/omap_mux/gpmc_ad14
 #setup actual GPIO
 echo 46 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpi46/direction
+echo "low" > /sys/class/gpio/gpio46/direction
 
 ####################################################################################################
 ##  BeagleBone P8, pin 17 -> GPIO0_27 (0+27) -> GIO8/BB8_17
@@ -198,7 +198,7 @@ echo "low" > /sys/class/gpio/gpio27/direction
 ##  BeagleBone P8, pin 18 -> GPIO2_1 (64+1) -> GIO9/BB8_18
 #
 #setup mode
-echo f > /sys/kernel/debug/omap_mux/gpmc_clk_mux0
+echo f > /sys/kernel/debug/omap_mux/gpmc_clk
 #setup actual GPIO
 echo 65 > /sys/class/gpio/export
 echo "low" > /sys/class/gpio/gpio65/direction
@@ -222,6 +222,6 @@ echo 63 > /sys/class/gpio/export
 echo "low" > /sys/class/gpio/gpio63/direction
 
 
-echo "Done with pin settings\n"
+echo "Done with pin settings"
 exit
 
