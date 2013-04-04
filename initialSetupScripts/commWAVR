@@ -67,15 +67,16 @@ def setupConnection():
 	#Get ACKT
 	settingUp=True
 	start=time.time()
+	ack=''
 	while settingUp:
 	    if (time.time()-start)<3:		    #Sets timeout to 2 seconds, less than half of actual timeout on AVR
-                ack=getString(100.0/1000.0)    
-                if (ack=='ACKB.'):
+                ack=getString(250.0/1000.0)    
+                if ((ack=='ACKB.') or (ack=='ACIB.') or (ack=='AAKB.')):
 		    return True
 	        elif ack!='' or ack!=' ':
 		    print '--' + ack + '--'
             else:					#Took to long, chip might be talking to graphics avr, shouldnt be though...wait for timeout to occur then retry
-		time.sleep(3)				#Timeout on AVR is 5 seconds
+		time.sleep(6)				#Timeout on AVR is 5 seconds
 		sendInterrupt()				#send interrupt, reset start for new timeout
 		start=time.time()
 
@@ -89,7 +90,7 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 	if stopOnOne:
 		oString=theString	
 	else:
-		oString='SYN'+theString					#string we are trying to send.
+		oString=theString					#string we are trying to send.
 	sendString(oString)
 	ack=''
 	while communicating:
@@ -97,7 +98,7 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 			communicating=False
 			
 		if (time.time()-start)<4 and ack=='':		#longer timeout, only 2 from first + 4 now is full
-                        ack=getString(100.0/1000.0)     	#check every 100ms	
+                        ack=getString(200.0/1000.0)     	#check every 100ms	
 			ackCompare='ACK'+oString
 			if (ack==ackCompare):
 				print '--'+ack
@@ -117,9 +118,9 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 				else:
 					communicating=False
 					return True
-                        elif (ack=='ACKB'):
+                        elif (ack=='ACKB.'):
 				return False
-			elif (ack=='ACKERROR'):
+			elif (ack=='ACKERROR.'):
 				return False
 
 	        else:		#we probably just had a timeout, setup the connection again
@@ -130,13 +131,16 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 #### Send Interrupt Routine ####
 def sendInterrupt():
 	os.system("echo \"high\" > /sys/class/gpio/gpio38/direction")
-	os.system("echo \"low\" > /sys/class/gpio/gpio38/direction")
+	time.sleep(25.0/1000.00)
+	os.system("echo \"low\" > /sys/class/gpio/gpio38/direction")	
+	time.sleep(25.0/1000.00)
 
 #### Send String Routine ####
 def sendString(STRING):
 	for char in STRING:
+		print "Writing " + char
 		serPort.write(char)
-		time.sleep(25.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
+		time.sleep(300.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
 	
 #### Get String Routine ####
 def getString(waitTime):
@@ -145,7 +149,6 @@ def getString(waitTime):
 	string+=serPort.read(serPort.inWaiting())
 	print string
 	return string
-
 
 
 ####################################################################
@@ -196,7 +199,7 @@ while not sent:
 		sent=sendTime(setString,askUser)
 		if not sent:
 			connectionSet=False
-
+			time.sleep(750.0/1000.0)
 
 #Write to a log that I am done
 outputSuccess.write("init_time...DONE\n")
