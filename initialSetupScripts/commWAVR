@@ -71,7 +71,7 @@ def setupConnection():
 	while settingUp:
 	    if (time.time()-start)<3:		    #Sets timeout to 2 seconds, less than half of actual timeout on AVR
                 ack=getString(250.0/1000.0)    
-                if ((ack=='ACKB.') or (ack=='ACIB.') or (ack=='AAKB.')):
+                if (ack=='A.'):
 		    return True
 	        elif ack!='' or ack!=' ':
 		    print '--' + ack + '--'
@@ -98,12 +98,12 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 			communicating=False
 			
 		if (time.time()-start)<4 and ack=='':		#longer timeout, only 2 from first + 4 now is full
-                        ack=getString(200.0/1000.0)     	#check every 100ms	
-			ackCompare='ACK'+oString
+                        ack=getString(100.0/1000.0)     	#check every 100ms	
+			ackCompare='A'+oString
 			if (ack==ackCompare):
 				print '--'+ack
 				communicating=False
-			elif (ack=='ACKBAD.'):
+			elif (ack=='B.'):
 				if stopOnOne:
 					hour=int(oString[0:2])
 					minute=int(oString[3:5])
@@ -118,9 +118,9 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 				else:
 					communicating=False
 					return True
-                        elif (ack=='ACKB.'):
+                        elif (ack=='A.'):
 				return False
-			elif (ack=='ACKERROR.'):
+			elif (ack=='E.'):
 				return False
 
 	        else:		#we probably just had a timeout, setup the connection again
@@ -140,7 +140,7 @@ def sendString(STRING):
 	for char in STRING:
 		print "Writing " + char
 		serPort.write(char)
-		time.sleep(300.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
+		time.sleep(250.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
 	
 #### Get String Routine ####
 def getString(waitTime):
