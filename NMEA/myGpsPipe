@@ -59,8 +59,9 @@ def placeTime(timeString):
 		date=fields[9]			
 		dmy=date[2:4]+','+date[:2]+',20'+date[4:6]
 		hms=str(int(time[:2])-5)+':'+time[2:4]+':'+time[4:6]		#converts from UTC to EST
+		
 		#Initiate program for communication with the Watchdog_AVR with the new time.
-		sendString=hms+'/'+dmy+'.'		
+		sendString='S'+hms+'/'+dmy+'.'		
 		logFile.write(sendString+'\n')
 		#os.system('./sendTime -s '+sendString) #put the binary sendTime in the /bin folder.
 		print 'Time and date is '+sendString
@@ -136,7 +137,7 @@ while noError:
 			currentString+= char	
 			
 		if stringsWrittenThisSection >= 15:
-			time.sleep(5)
+			time.sleep(4)
 			timeSlept+=1 
 	                stringsWrittenThisSection=0  
 
