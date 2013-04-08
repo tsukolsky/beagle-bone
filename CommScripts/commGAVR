@@ -1,33 +1,25 @@
 #!/usr/bin/python
 
-##Test script for softSetup
-#!/usr/bin/python
+##Test script for GAVR
 ###############################################################
-## setup.py
+## testGAVR.py
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013
-## Last Revised: 3/31/2013
+## Last Revised: 4/8/2013
 ###############################################################
 ## Description:
-##    This module is responisble for setting the Watchdog AVR's
-## time in the case that there is a valid time stamp from the 
-## NMEA strings of the GPS. Date is not preserved and must be
-## user provided in the case of a complete system halt. This
-## module will establish a connection, send the string that is
-## stored in a remote file to the watchdog avr. It will then exit.
-##
+##    This module is responisble for communication between the GAVR
+## and the BeagleBone
 ###############################################################
-## Revision:
-##	3/31- Changed functionality to match the board we have and
-##	      that time and date are both sent.
+## Revisions:	
+##	3/31- Tweaked funciontality to work with current model.
+##	4/8-- Edited to match commWAVR parameters that have been
+##	      proven to work. Must send time with beginning 'S'
+##	      then two characters for each time param, date can be single.
 ###############################################################
 ## Changes to be made:
-##     Probably going to add an outer loop for the send function;
-## Every 30 seconds, if no time is set, loop through the function
-## looking for valid GPS strings. Once one is good, then proceed.
-## This will mean we can integrate initTime.py with setup.py
-##
+##     
 ###############################################################
 
 import time
@@ -64,10 +56,9 @@ else:
 def setupConnection():
 	#Setup communication line with board, Alert the Watchdog we are about to ask for something
 	sendInterrupt()
-	#Get ACKT
+	#Get ACKB
 	settingUp=True
 	start=time.time()
-	ack=''
 	while settingUp:
 	    if (time.time()-start)<3:		    #Sets timeout to 2 seconds, less than half of actual timeout on AVR
                 ack=getString(250.0/1000.0)    
@@ -76,51 +67,44 @@ def setupConnection():
 	        elif ack!='' or ack!=' ':
 		    print '--' + ack + '--'
             else:					#Took to long, chip might be talking to graphics avr, shouldnt be though...wait for timeout to occur then retry
-		time.sleep(6)				#Timeout on AVR is 5 seconds
+		time.sleep(8)				#Timeout on AVR is 5 seconds
 		sendInterrupt()				#send interrupt, reset start for new timeout
 		start=time.time()
 
 	return False
 
 #### Send Time Routine ####
-def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep trying to send, always stop after one 								#transmission
+def sendTime(theString,stopOnOne):			#stopOnOne==askUser
 	#Got ack, time to send time string good or bad
 	communicating=True
 	start=time.time()
 	if stopOnOne:
-		oString=theString	
+		oString=theString
 	else:
-		oString=theString					#string we are trying to send.
+		oString=theString
 	sendString(oString)
 	ack=''
 	while communicating:
 		if stopOnOne==False:
 			communicating=False
 			
-		if (time.time()-start)<4 and ack=='':		#longer timeout, only 2 from first + 4 now is full
+		if (time.time()-start)<7 and ack=='':		#longer timeout, only 2 from first + 4 now is full
                         ack=getString(500.0/1000.0)     	#check every 100ms	
-			ackCompare='A'+oString
+			ackCompare='E.'				#NOte this is the testing dummy, shouldn't really need this. If there is an error, exit.
 			if (ack==ackCompare):
 				print '--'+ack
 				communicating=False
 			elif (ack=='B.'):
-				if stopOnOne:
-					hour=int(oString[0:2])
-					minute=int(oString[3:5])
-					second=int(oString[6:8])
-				else:
-					hour=int(oString[3:5])
-					minute=int(oString[6:8])
-					second=int(oString[9:11])
+				hour=int(oString[1:3])
+				minute=int(oString[4:6])
+				second=int(oString[7:9])
 				
 				if (hour/24==0) and (minute/60==0) and (second/60==0):
-					return False			##restarts transmission
+					return False
 				else:
 					communicating=False
 					return True
-                        elif (ack=='A.'):
-				return False
-			elif (ack=='E.'):
+  			elif (ack=='A.'):
 				return False
 
 	        else:		#we probably just had a timeout, setup the connection again
@@ -130,17 +114,16 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 
 #### Send Interrupt Routine ####
 def sendInterrupt():
-	os.system("echo \"high\" > /sys/class/gpio/gpio38/direction")
-	time.sleep(25.0/1000.00)
-	os.system("echo \"low\" > /sys/class/gpio/gpio38/direction")	
-	time.sleep(25.0/1000.00)
+	os.system("echo \"high\" > /sys/class/gpio/gpio39/direction")
+	time.sleep(25.0/1000.0)
+	os.system("echo \"low\" > /sys/class/gpio/gpio39/direction")
+	time.sleep(25.0/1000.0)
 
 #### Send String Routine ####
 def sendString(STRING):
 	for char in STRING:
-		print "Writing " + char
 		serPort.write(char)
-		time.sleep(250.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
+		time.sleep(250.0/1000.0)
 	
 #### Get String Routine ####
 def getString(waitTime):
@@ -151,19 +134,19 @@ def getString(waitTime):
 	return string
 
 
+
 ####################################################################
 #####################   Main Program   #############################
 ####################################################################
 
-#Initializations for the serial port for WAVR, on UART1 for bone, UART0 for WAVR
-serialPort='/dev/ttyO1'
+#Initializations for the serial port. Bone communicates on UART4, GAVR on UART0
+serialPort='/dev/ttyO4'
 baudRate=9600
 
 #Declare file i/o variables
 logFile='/home/root/tmp/logs/startupLog.txt'
 
-#logFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/initialSetupScripts/startupLog.txt'		#what we are going to print to for log
-
+#logFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/startupLog.txt'		#what we are going to print to for log
 try:
     outputSuccess=open(logFile,'a')
 except:
@@ -200,7 +183,5 @@ while not sent:
 		if not sent:
 			connectionSet=False
 			time.sleep(750.0/1000.0)
-
-#Write to a log that I am done
-outputSuccess.write("init_time...DONE\n")
+# Exit
 exit()
