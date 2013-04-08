@@ -65,7 +65,7 @@ def placeTime(timeString):
 		#Initiate program for communication with the Watchdog_AVR with the new time.
 		sendString='S'+hms+'/'+dmy+'.'		
 		logFile.write(sendString+'\n')
-		os.system('commWAVR -s '+sendString) #put the binary sendTime in the /bin folder.
+		subprocess.call("./../CommScripts/commWAVR","-s",sendString) #put the binary sendTime in the /bin folder.
 		print 'Time and date is '+sendString
 		return False
  	else:
