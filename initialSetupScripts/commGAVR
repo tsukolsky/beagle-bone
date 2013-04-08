@@ -65,7 +65,7 @@ def setupConnection():
 	        elif ack!='' or ack!=' ':
 		    print '--' + ack + '--'
             else:					#Took to long, chip might be talking to graphics avr, shouldnt be though...wait for timeout to occur then retry
-		time.sleep(3)				#Timeout on AVR is 5 seconds
+		time.sleep(7)				#Timeout on AVR is 5 seconds
 		sendInterrupt()				#send interrupt, reset start for new timeout
 		start=time.time()
 

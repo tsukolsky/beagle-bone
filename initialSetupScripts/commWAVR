@@ -98,7 +98,7 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 			communicating=False
 			
 		if (time.time()-start)<4 and ack=='':		#longer timeout, only 2 from first + 4 now is full
-                        ack=getString(100.0/1000.0)     	#check every 100ms	
+                        ack=getString(500.0/1000.0)     	#check every 100ms	
 			ackCompare='A'+oString
 			if (ack==ackCompare):
 				print '--'+ack
