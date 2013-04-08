@@ -56,21 +56,20 @@ def placeTime(timeString):
 		
 	#Split the string
 	fields=timeString.split(',')
-	if (timeString.find('GPRMC') != -1) and (stuff[2]) == 'A'):	#found it, valid, save latest data
+	if (timeString.find('GPRMC') != -1) and (fields[2] == 'A'):	#found it, valid, save latest data
 		time=fields[1]
 		date=fields[9]			
 		dmy=date[2:4]+','+date[:2]+',20'+date[4:6]
-		hms=str(int(time[:2])-5)+':'+time[2:4]+':'+time[4:6]		#converts from UTC to EST
+		hms=str(int(time[:2])-4)+':'+time[2:4]+':'+time[4:6]		#converts from UTC to EST
 		
 		#Initiate program for communication with the Watchdog_AVR with the new time.
 		sendString='S'+hms+'/'+dmy+'.'		
 		logFile.write(sendString+'\n')
-		#os.system('./sendTime -s '+sendString) #put the binary sendTime in the /bin folder.
+		os.system('commWAVR -s '+sendString) #put the binary sendTime in the /bin folder.
 		print 'Time and date is '+sendString
 		return False
  	else:
-		logFile.write('NONE\n')	#don't need to initiate sending routine.
-		time.sleep(45)			#wait 45 seconds before trying again.
+		logFile.write('NONE\n')	#don't need to initiate sending routin#wait 45 seconds before trying again.
 		return True
 
 	writefile.close()
@@ -142,7 +141,7 @@ while noError:
 		if stringsWrittenThisSection >= 15:
 			time.sleep(4)
 			timeSlept+=1 
-	                stringsWrittenThisSection=0  
+	                stringsWrittenThisSection=0
 
         if timeSlept >= 225:  #450 represents every hour
 			timeSlept=0

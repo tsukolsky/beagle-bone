@@ -37,8 +37,8 @@
 ## GPWPL: Waypoint data <not use>
 ###############################################################
 
-READFILE = '/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/raw_strings.txt'
-WRITEFILE='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/locations.txt'
+READFILE = '/home/root/Documents/tmp/nmea/raw_strings.txt'
+WRITEFILE='/home/root/Documents/tmp/nmea/locations.txt'
 
 #read the file
 infile = open(READFILE,'r')
