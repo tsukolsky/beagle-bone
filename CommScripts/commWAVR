@@ -7,7 +7,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013
-## Last Revised: 3/31/2013
+## Last Revised: 4/8/2013
 ###############################################################
 ## Description:
 ##    This module is responisble for setting the Watchdog AVR's
@@ -21,6 +21,7 @@
 ## Revision:
 ##	3/31- Changed functionality to match the board we have and
 ##	      that time and date are both sent.
+##  4/8-- Tweaked for it to work standalone on Bone.
 ###############################################################
 ## Changes to be made:
 ##     Probably going to add an outer loop for the send function;
@@ -157,7 +158,7 @@ serialPort='/dev/ttyO1'
 baudRate=9600
 
 #Declare file i/o variables
-logFile='/home/root/tmp/logs/startupLog.txt'
+logFile='/home/root/Documents/tmp/logs/startupLog.txt'
 
 #logFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/initialSetupScripts/startupLog.txt'		#what we are going to print to for log
 

@@ -4,7 +4,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013
-## Last Revised: 3/31/2013
+## Last Revised: 4/8/2013
 ###############################################################
 ## Description:
 ##    This module is responisble for piping the raw NMEA strings
@@ -45,13 +45,15 @@ if options.debug is None:
 #########################   	Method for placing Time 	###########################
 ###########################################################################################
 def placeTime(timeString):
-	WRITEFILE='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/initTime.txt'
-	#WRITEFILE='/home/root/nmea/savedTimeFile.txt'
+	#WRITEFILE='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/initTime.txt'
+	WRITEFILE='/home/root/Documents/tmp/nmea/savedTimeFile.txt'
 	
 	#Parse the time, then alert the sendTime script that it needs to execute.
-	logFile=open(WRITEFILE,'a')	#append as a log
-
-	gotTime=False	#default
+	try:
+		logFile=open(WRITEFILE,'a')	#append as a log
+	except:
+		exit()
+		
 	#Split the string
 	fields=timeString.split(',')
 	if (timeString.find('GPRMC') != -1) and (stuff[2]) == 'A'):	#found it, valid, save latest data
@@ -68,6 +70,7 @@ def placeTime(timeString):
 		return False
  	else:
 		logFile.write('NONE\n')	#don't need to initiate sending routine.
+		time.sleep(45)			#wait 45 seconds before trying again.
 		return True
 
 	writefile.close()
@@ -83,8 +86,8 @@ def placeTime(timeString):
 ###########################################################################################
 
 #Declare where the NMEA strings are going to be written
-#nmeaFile='/tmp/nmea/raw_strings.txt'
-nmeaFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/raw_strings_dev.txt'
+nmeaFile='/home/root/Documents/tmp/nmea/raw_strings.txt'
+#nmeaFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/raw_strings_dev.txt'
 hnmeaFile=open(nmeaFile,'w')	#we are appending to this file
 
 ## Open serial connection that is going to be used for GPS
