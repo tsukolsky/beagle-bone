@@ -14,6 +14,7 @@ parser.add_option('-d',action="store_true", dest="debug",default=False,help='Use
 
 (options, args) = parser.parse_args()
 
+
 if options.inString is None and options.debug is False:
     askUser=False
     inputString='NONE.'
@@ -23,6 +24,7 @@ else:
     askUser=False
     inputString=options.inString
 
-print "I am the child process and received the string:"+inputString
+cmd="echo 'I am the child process and received the string:"+inputString+"' >> whatIGot.txt"
+os.system(cmd);
 
 exit(10)

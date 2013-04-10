@@ -1,3 +1,23 @@
+/*******************************************************************************\
+| commandCenter.c
+| Author: Todd Sukolsky
+| Initial Build: 4/10/2013
+| Last Revised: 4/10/2013
+| Copyright of Todd Sukolsky
+|================================================================================
+| Description: This module is responsible for calling all processes that interact with
+|	the board and the USB drive on the BeagleBone. To start the GPS is creates 
+| 	a new thread; when pinged by the GAVR it will take in the request, then
+|	reply appropriately. If a shutdown is imminent, it will run a shutdown script
+|	then execute the "halt" command.
+|--------------------------------------------------------------------------------
+| Revisions:
+|	4/10: Initial build. Tried a test script, located in beagle-bone.git/TestScripts/commandTest.c
+|================================================================================
+| *NOTES: (1) BONE_INT/GAVRO (GAVR request interrupt) is on P8,Pin 5=GPIO1_2
+|	  (2) BONE_INT/WAVRO (Shutdown notification) is on P8, pin 6=GPIO1_3
+\*******************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +39,7 @@ int main(){
 	bool success=false,running=true;
 	pthread_attr_t attr;
 	
-	//Open files for reading.
+	//Open GPIO files for reading.
 	fGAVRrequestInt = File.open("/sys/class/gpio/gpioX/value");
 	fShutdownInt = File.open("/sys/class/gpio/gpioY/value"); 
 
@@ -53,38 +73,36 @@ int main(){
 	return (0);
 }//end main
 
-
-
+/****************************************************************************/
 void error(const char *msg){
 	perror(msg);
 	//exit(11);
 }
-
-
+/****************************************************************************/
 bool pGAVRrequest(void){
 	pidCommGAVR=fork();
 	if (pidCommGAVR<0){
 		error("Error starting \"ReceiveGAVR\" process.\n");
 		return false;
 	} else if (pidReceiveGAVR==0){//child 
-		execvp("./home/root/Documents/beagle-bone.git/CommScripts/ReceiveGAVR");
+		system("/home/root/Documents/beagle-bone.git/CommScripts/ReceiveGAVR");
 	} else { //Parent
 		waitpid(pidReceiveGAVR,0);
 	}
 	return true;
 }
-
+/****************************************************************************/
 void *gpsThread(void *args){
 	//IN a new thread, start that ./myGpsPipe wihc does everything
-	execvp("./home/root/Documents/beagle-bone.git/NMEA/myGpsPipe",(char *)NULL);
+	system("/home/root/Documents/beagle-bone.git/NMEA/myGpsPipe");
 	pthread_exit(NULL);
 }//end gpsThread.
-
+/****************************************************************************/
 bool pShutdown(void){
 	//Save things...
 	pidShutdown=fork();
 	if (pidShutdown==0){//child
-		execvp(".//home/root/Documents/beagle-bone.git/shutdownProtocol",(char *)NULL);
+		system("/home/root/Documents/beagle-bone.git/setupScripts/shutdownProtocol");
 	} else if (pidShutdown<0){
 		error("Error starting shutdown process.\n");
 		return false;
@@ -93,12 +111,12 @@ bool pShutdown(void){
 	}
 	return true;
 }
-
+/****************************************************************************/
 void pPinSetup(void){
 	//Turn this into the correct process (pinSetup)
 	pidPinSetup = fork();
 	if (pidPinSetup==0){			//Child
-		execvp(".//home/root/Documents/beagle-bone.git/initialSetupScripts/pinSetup",(char *)NULL);	//initialize the pins.
+		system("/home/root/Documents/beagle-bone.git/setupScripts/pinSetup");	//initialize the pins.
 	} else if (pidPinSetup<0){
 		error("Error starting new process.\n");
 		return false;
@@ -107,3 +125,4 @@ void pPinSetup(void){
 	}
 	return true;
 }	
+/****************************************************************************/

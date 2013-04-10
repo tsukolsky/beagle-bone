@@ -4,7 +4,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/13
-## Last Revices: 4/3/13
+## Last Revices: 4/10/13
 ########################################################################
 ## Description:
 ##    This script prepares all pins and ports needed for use on the 
@@ -16,7 +16,15 @@
 ########################################################################
 ## Revisions:
 ##	4/3: Added GPIO allocations for ports.
+##	4/10: Changed alert pins to inputs, changed a GPIO to WAVR to output
+##	      that goes high off start.
 ########################################################################
+## Notes:
+##	(1): B6|B5|B4|B3|B2|B1|B0
+##	     B6: 0, B5: Input-0, Output-1, B4: PullUp-0, PullDown-1, B3: PullEnable-0, Disable-1
+##	     B2-B0: Mode
+########################################################################
+
 
 ###################################################################################################
 ## Setup BeagleBone UART1 : BB P9, pin 24 -> UART1_TXD -> Watchdog_AVR_rxd
