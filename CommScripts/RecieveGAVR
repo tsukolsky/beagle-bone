@@ -27,12 +27,13 @@ import optparse
 
 serialPort='/dev/ttyO4'
 baudRate=9600
-path='~/Documents/Trips/'
+USBpath='/dev/USB'
+VirtualPath='/ReCycle/Trips/'
 
 #### Send String Routine ####
 def sendString(STRING):
 	for char in STRING:
-		print "Writing " + char
+		#print "Writing " + char
 		serPort.write(char)
 		time.sleep(250.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
 
@@ -41,11 +42,12 @@ def getString(waitTime):
 	time.sleep(waitTime)
 	string=''
 	string+=serPort.read(serPort.inWaiting())
-	print string
+	#print string
 	return string
 
 def deleteTrip(tripNumber):
-	os.system("rm "+path+str(tripNumber))
+	rmCommand="rm "+tripLocation+str(tripNumber)+".txt"
+	os.system(rmCommand)
 
 
 ##Function get's called when there is an interrupt from the GAVR. Need to reply with an "A." then get ready to receive
@@ -66,51 +68,58 @@ except:
 
 ### Start functionality here ###
 ##Find out how many trips are in data.
-readFile=open(path+'.info','r')
+tripLocation=USBpath+VirtualPath
+infoFileLocation=tripLocation + '.info'
+readFile=open(infoFileLocation,'r')
 lines=readFile.readlines()
 tripNumber=int(lines[0][0])		##Grabs the first character/int on first line which is number of trips that we are looking at.
 communicating=True
+flagError=False
 state=0
 response=''
-tripFile=open(path+str(tripNumber)+'.txt','w')
+tripFilePath=tripLocation+str(tripNumber+1)+'.txt'		#newTripNumber=tripNumber+1
+tripFile=open(tripFilePath,'w')
 
 while communicating:
 	if (state==0):
 		sendString("A.")
 		state=1
 	elif (state==1):
-		response = getString(500.0/1000.0)
+		response = getString(200.0/1000.0)
 		state=2
 	elif (state==2):
 		if (response=='E.'):
 			print "Error receiving on port " + serialPort
-			exit()
+			communicating=False
 		elif (response=='NT.'):
 			sendTrips=True						#Need to send them trips, start the transmission to GAVR script.
 			sendString(response)					#Respond with appropriate ack
-			exit()
+			communicating=False
 		elif (response[0]=='D'):					#User wants to delete a trip somewhere on the BeagleBone, see which one then do it
 			splitResponse=response.split('.')
 			sendString(response)
 			deleteTrip(int(splitResponse[1:]))			#Call delete trips with the appropriate trip number
-			exit()
+			communicating=False
 		elif (response[0]=='T.'):					#Sending us trip data.
 			state=3
 			sendString(response)					#ack back that we know the trip is coming.
 		else:
 			sendString("E.")
-			exit()
+			communicating=False
 	elif (state==3):
-		response=getString(500.0/1000.0)
+		response=getString(200.0/1000.0)
 		state=4
 	elif (state==4):
 		if (response=='E.'):						#There was an error
 			print "Error receiving trip on port " + serialPort
-			exit()
+			communicating=False
+			flagError=True
 		elif (response=='D.'):						#We are done communicating
 			communicating=False		
 		else:
-		 	tripFile.write(response+'\n')				#Writes the string into a file.
+			sendString(response)
+			strToFile=response+'\n'
+		 	tripFile.write(strToFile)				#Writes the string into a file.
 			state=3							#Go back to state 3 and get the next field
 	else:
 		print "Error processing state...out of bounds"
@@ -118,10 +127,12 @@ while communicating:
 ##end while communicating
 tripFile.close()
 readFile.close()
-if state==4:
-	os.system("echo "+str(tripNumber+1)+">" + path +"/.info")			#update the .info file		
+if state==4 and not flagError:
+	echoCommand="echo "+str(tripNumber+1)+" > " + infoFileLocation
+	os.system(echoCommand)			#update the .info file		
 else:
-	os.system("rm "+path+str(tripNumber)+".txt")					#if we didn't write anything to the file, make sure it isn't there.
+	removeCommand="rm "+tripLocation+str(tripNumber+1)+".txt"
+	os.system(removeCommand)					#if we didn't write anything to the file, make sure it isn't there.
 
 exit()
 

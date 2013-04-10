@@ -16,6 +16,7 @@
 |================================================================================
 | *NOTES: (1) BONE_INT/GAVRO (GAVR request interrupt) is on P8,Pin 5=GPIO1_2
 |	  (2) BONE_INT/WAVRO (Shutdown notification) is on P8, pin 6=GPIO1_3
+|	  (3) WIO6/BB8_8 (Booted successfully notification for WAVR) is on P8, pin 8=GPIO2_3
 \*******************************************************************************/
 
 #include <stdio.h>
@@ -30,6 +31,7 @@ void error(const char *msg);
 void *gpsThread(void *args);
 bool pShutdown(void);
 bool pGAVRrequest(void);
+bool pUSBupdate();
 
 int pidPinSetup, pidShutdown, pidGAVRrequest;
 
@@ -40,8 +42,9 @@ int main(){
 	pthread_attr_t attr;
 	
 	//Open GPIO files for reading.
-	fGAVRrequestInt = File.open("/sys/class/gpio/gpioX/value");
-	fShutdownInt = File.open("/sys/class/gpio/gpioY/value"); 
+	fGAVRrequestInt = fopen("/sys/class/gpio/gpio34/value");
+	fShutdownInt = fopen("/sys/class/gpio/gpio66/value"); 
+	fUSBinput = fopen("/");
 
 	//Call pin setup
 	success=pPinSetup(void);
@@ -54,19 +57,27 @@ int main(){
 	pthread_create(&newThread,&attr,gpsThread,&ids);
 
 	while (running){
-		GAVRrequestInt=fGAVRrequestInt.readbyte();
-		ShutdownInt=fShutdownInt.readbyte();
+		char buffer[4];
+		fread(buffer,1,1,fGAVRrequestInt);
+		GAVRrequestInt=atoi(buffer);
+		bzero(buffer,4);
+		fread(buffer,1,1,fShutdownInt);
+		ShutdownInt=atoi(buffer);
 
+		if (USBinserted && !GAVRrequestInt && !ShutdownInt){
+			printf("Alerting GAVR of USB inserted");
+			success=pUSBupdate();
+		}
 		//If there was an interrupt for the GAVR, open that protocol
 		if (GAVRrequestInt && !ShutdownInt){
 			printf("Got interrupt for GAVR request , going to new process.\n");
-			success=pGAVRrequest(void);
+			success=pGAVRrequest();
 		}
 		if (ShutdownInt){
 			//Kill all processes, save things.
 			success=pShutdown(void);
 			printf("Shutdown process finished, halting...");
-			execvp("halt",(char *)NULL); //shuts system down.
+			system("halt"); //shuts system down.
 			return (1);
 		}
 	}//end while(running)
@@ -78,6 +89,8 @@ void error(const char *msg){
 	perror(msg);
 	//exit(11);
 }
+/****************************************************************************/
+bool pUSBupdate(){}
 /****************************************************************************/
 bool pGAVRrequest(void){
 	pidCommGAVR=fork();

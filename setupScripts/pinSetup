@@ -17,7 +17,7 @@
 ## Revisions:
 ##	4/3: Added GPIO allocations for ports.
 ##	4/10: Changed alert pins to inputs, changed a GPIO to WAVR to output
-##	      that goes high off start.
+##	      that goes high off start (GPIO2_3).
 ########################################################################
 ## Notes:
 ##	(1): B6|B5|B4|B3|B2|B1|B0
@@ -89,7 +89,7 @@ echo "low" > /sys/class/gpio/gpio39/direction
 ##  BeagleBone P8, pin 5 -> GPIO1_2 (32+2) -> BONE_INT/GAVRO
 #
 #setup mode
-echo f > /sys/kernel/debug/omap_mux/gpmc_ad2
+echo 1f > /sys/kernel/debug/omap_mux/gpmc_ad2
 #setup actual GPIO
 echo 34 > /sys/class/gpio/export
 echo "low" > /sys/class/gpio/gpio34/direction
@@ -98,7 +98,7 @@ echo "low" > /sys/class/gpio/gpio34/direction
 ##  BeagleBone P8, pin 6 -> GPIO1_3 (32+3) -> BONE_INT/WAVRO
 #
 #setup mode
-echo f > /sys/kernel/debug/omap_mux/gpmc_ad3
+echo 1f > /sys/kernel/debug/omap_mux/gpmc_ad3
 #setup actual GPIO
 echo 35 > /sys/class/gpio/export
 echo "low" > /sys/class/gpio/gpio35/direction
@@ -119,7 +119,7 @@ echo "low" > /sys/class/gpio/gpio66/direction
 echo f > /sys/kernel/debug/omap_mux/gpmc_oen_ren
 #setup actual GPIO
 echo 67 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpio67/direction
+echo "high" > /sys/class/gpio/gpio67/direction
 
 ####################################################################################################
 ##  BeagleBone P8, pin 9 -> GPIO2_5 (64+5) -> WIO0/BB8_9
