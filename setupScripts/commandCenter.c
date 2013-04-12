@@ -2,7 +2,7 @@
 | commandCenter.c
 | Author: Todd Sukolsky
 | Initial Build: 4/10/2013
-| Last Revised: 4/11/2013
+| Last Revised: 4/12/2013
 | Copyright of Todd Sukolsky
 |================================================================================
 | Description: This module is responsible for calling all processes that interact with
@@ -15,6 +15,8 @@
 |	4/10: Initial build. Tried a test script, located in beagle-bone.git/TestScripts/commandTest.c
 |	4/11: Working on USB functionality. Changed system calls to "execv" calls. Getting rid of syntax
 |	      errors.
+|	4/12: Added some bool functionality to eliminate repetitive calls. Might put fopen() in the while
+|	      loop instead of before original. Transferring to BeagleBone for testing now.
 |================================================================================
 | *NOTES: (1) BONE_INT/GAVRO (GAVR request interrupt) is on P8,Pin 5=GPIO1_2
 |	  (2) BONE_INT/WAVRO (Shutdown notification) is on P8, pin 6=GPIO1_3
@@ -33,15 +35,16 @@ void error(const char *msg);
 void *gpsThread(void *args);
 bool pShutdown(void);
 bool pGAVRrequest(void);
-bool pUSBupdate();
+bool pUSBupdate(void);
+bool pPinSetup(void);
 
-int pidPinSetup, pidShutdown, pidGAVRrequest;
-bool updatingUSB=false,calledShutdown=false,receivingGAVR=false;						//blocking bool to keep from calling update USB script over and over.	
+int pidPinSetup, pidShutdown, pidGAVRrequest,pidUSBupdate;
+bool updatedUSB=false,calledShutdown=false,receivingGAVR=false;						//blocking bool to keep from calling update USB script over and over.	
 
 int main(){
 	//Declare normal variables.
 	FILE *fGAVRrequestInt, *fShutdownInt, *fUSBinput;
-	int GAVRrequestInt, ShutdownInt, ids=0;
+	int GAVRrequestInt, ShutdownInt, USBinserted, ids=0;
 	bool success=false,running=true;				//whether or not the script call was successful; whether we are running.
 
 	//Declare P-Thread variables
@@ -49,12 +52,12 @@ int main(){
 	pthread_attr_t attr;
 	
 	//Open GPIO files for reading.
-	fGAVRrequestInt = fopen("/sys/class/gpio/gpio34/value");
-	fShutdownInt = fopen("/sys/class/gpio/gpio66/value"); 
-	fUSBinput = fopen("/home/root/Documents/tmp/.usbinfo");				//This will change.
+	fGAVRrequestInt = fopen("/sys/class/gpio/gpio34/value","r");
+	fShutdownInt = fopen("/sys/class/gpio/gpio66/value","r"); 
+	fUSBinput = fopen("/home/root/Documents/tmp/.usbinfo","r");				//This will change.
 
 	//Call pin setup
-	success=pPinSetup(void);
+	success=pPinSetup();
 	if (!success){error("Unable to execute pin setup.\n");exit(10);}
 
 	//Create a new thread for the GPS daemon.
@@ -70,24 +73,31 @@ int main(){
 		bzero(buffer,4);					//zero the buffer to allow for next read.
 		fread(buffer,1,1,fShutdownInt);				//see if there is a shutdown request
 		ShutdownInt=atoi(buffer);				
+		bzero(buffer,4);
+		fread(buffer,1,1,fUSBinput);
+		USBinserted=atoi(buffer);
 
-		if (USBinserted && !GAVRrequestInt && !ShutdownInt && !updatingUSB){
-			updatingUSB=true;
+		if (USBinserted && !GAVRrequestInt && !ShutdownInt && !updatedUSB){
+			updatedUSB=true;
 			printf("Alerting GAVR of USB inserted");
-			success=pUSBupdate();
-		}
+			//success=pUSBupdate();
+		} else if (!USBinserted){updatedUSB=false;}					//this should only be sent low when a USB is detached.
+		else;
+
 		//If there was an interrupt for the GAVR, open that protocol
-		if (GAVRrequestInt && !ShutdownInt){
+		if (GAVRrequestInt && !ShutdownInt && !receivingGAVR){
 			receivingGAVR=true;
 			printf("Got interrupt for GAVR request, going to new process.\n");
-			success=pGAVRrequest();
-		}
+			//success=pGAVRrequest();
+		} else if (!GAVRrequestInt){receivingGAVR=false;}
+		else;
+
 		if (ShutdownInt && !calledShutdown){
 			calledShutdown=true;
 			//Kill all processes, save things.
-			success=pShutdown(void);
+			success=pShutdown();
 			printf("Shutdown process finished, halting...");
-			system("halt"); //shuts system down.
+			//system("halt"); //shuts system down.
 			return (1);
 		}
 	}//end while(running)
@@ -100,7 +110,7 @@ void error(const char *msg){
 	//exit(11);
 }
 /****************************************************************************/
-bool pUSBupdate(){
+bool pUSBupdate(void){
 	pidUSBupdate=fork();
 	if (pidUSBupdate==0){//child
 		char *args[]={"/home/root/Documents/beagle-bone.git/CommScripts/SendGAVR","-s","USB.",0};
@@ -112,23 +122,22 @@ bool pUSBupdate(){
 		return false;
 	} else {
 		waitpid(pidUSBupdate,NULL,0);
-		updatingUSB=false;
 	}
 	return true;
 }
 /****************************************************************************/
 bool pGAVRrequest(void){
-	pidCommGAVR=fork();
-	if (pidCommGAVR<0){
+	pidGAVRrequest=fork();
+	if (pidGAVRrequest<0){
 		error("Error starting \"ReceiveGAVR\" process.\n");
 		return false;
-	} else if (pidReceiveGAVR==0){//child 
+	} else if (pidGAVRrequest==0){//child 
 		char *args[]={"/home/root/Documents/beagle-bone.git/CommScripts/ReceiveGAVR",0};
 		execv(args[0],args);
 		error("Unable to exec ReceiveGAVR.");
 		return false;
 	} else { //Parent
-		waitpid(pidReceiveGAVR,0);
+		waitpid(pidGAVRrequest,0);
 		receivingGAVR=false;					//Reset bool to allow for a new receive, if needed.
 	}
 	return true;
@@ -158,13 +167,14 @@ bool pShutdown(void){
 	return true;
 }
 /****************************************************************************/
-void pPinSetup(void){
+bool pPinSetup(void){
 	//Turn this into the correct process (pinSetup)
 	pidPinSetup = fork();
 	if (pidPinSetup==0){							//Child
 		char *args[]={"/home/root/Documents/beagle-bone.git/setupScripts/pinSetup",0};
 		execv(args[0],args);
 		error("Unable to exec \"pinSetup\".");				//initialize the pins.
+		return false;
 	} else if (pidPinSetup<0){
 		error("Error starting new process.\n");
 		return false;
