@@ -4,7 +4,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013
-## Last Revised: 4/8/2013
+## Last Revised: 4/15/2013
 ###############################################################
 ## Description:
 ##    This module is responisble for piping the raw NMEA strings
@@ -17,6 +17,9 @@
 ###############################################################
 ## Revisions:
 ##	Changed which device is used by default.
+##	4/15- Pipe writes strings to "CURRENT.TXT" in a path. It's the
+##		  job of the ReceiveGAVR to change the filename to what trip it is,
+##		  clear the "CURRENT.TXT" file. 
 ###############################################################
 
 import time
@@ -24,6 +27,7 @@ import os
 import serial
 import sys
 import optparse
+import glob
 
 ##OPTPARSER INFO
 use = "Usage: %prog [options] <arguments>"
@@ -42,7 +46,7 @@ if options.debug is None:
 	options.debug=False
 
 ###########################################################################################
-#########################   	Method for placing Time 	###########################
+#########################   	Method for placing Time 	###############################
 ###########################################################################################
 def placeTime(timeString):
 	#WRITEFILE='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/initTime.txt'
@@ -69,7 +73,7 @@ def placeTime(timeString):
 		print 'Time and date is '+sendString
 		return False
  	else:
-		logFile.write('NONE\n')	#don't need to initiate sending routin#wait 45 seconds before trying again.
+		logFile.write('NONE\n')	#don't need to initiate sending routine
 		return True
 
 	writefile.close()
@@ -83,9 +87,11 @@ def placeTime(timeString):
 ###########################################################################################
 #########################   	   Main Program			###########################
 ###########################################################################################
+#Find out how many files already exist.
+gpsPath='/home/root/Documents/tmp/gps/'
 
 #Declare where the NMEA strings are going to be written
-nmeaFile='/home/root/Documents/tmp/nmea/raw_strings.txt'
+nmeaFile=gpsPath+'CURRENT.txt'
 #nmeaFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/raw_strings_dev.txt'
 hnmeaFile=open(nmeaFile,'w')	#we are appending to this file
 
@@ -126,23 +132,26 @@ while noError:
 			currentString += char
 			if options.debug:
 				print currentString
-	
+				
+			#Write to the file with all GPS strings
 			hnmeaFile.write(currentString) 			#newline is already appended on end
 			stringsWrittenThisSection += 1
 			#This section will check to see if string is valid for time output to AVR. If we are in a 40 second increment of the loop and the time is not set, we should send the current string to the function and wait to see if it was a valid. If it was valid the function returns False and we no longer go through this loop; if invalid returns True and we will try another few strings ONLY for this 40 second increment. If it is true, it will not go on the next 40 second increment, but only after a half hour
-			if timeSlept%5==0 and getTime:	#if in first 40 seconds, look for real string
-				getTime=placeTime(currentString)
+			if timeSlept%5==0 and getTime:			#if in first 40 seconds, look for real string
+				getTime=placeTime(currentString)	#this should really be if there is a GPMRC, who cares
 				
-
-			currentString=''				#reset string
+			#Null the current string so that the next one can be received correctly	
+			currentString=''						
 		elif char!='\00' and char != ' ':			#no new line, just another character, add to string
 			currentString+= char	
-			
+		
+		#If 15 strings were writte, take a break for a short time. Ends up with about 30% duty cycle.
 		if stringsWrittenThisSection >= 15:
 			time.sleep(4)
 			timeSlept+=1 
 	                stringsWrittenThisSection=0
 
+		#If we've slept 225 times, reset it first off and then enable the pipe to send a time to the WAVR
         if timeSlept >= 225:  #450 represents every hour
 			timeSlept=0
 			getTime=True		

@@ -31,23 +31,32 @@ import optparse
 ##OPTPARSER INFO
 inputString=''
 askUser=False
+sendTrips=False
 
 use = "Usage: %prog [options] <arguments>. String entered must have '.' to terminate."
 parser = optparse.OptionParser(usage=use)
 parser.add_option('-s', dest='inString', help='String to be sent, real mode')
+parser.add_option('-t',action="store_true",dest="trips",default=False,help='Send trips to GAVR')
 parser.add_option('-D',action="store_true", dest="debug",default=False,help='User String for debug mode')
 
 (options, args) = parser.parse_args()
 
-if options.inString is None and options.debug is False:
+if options.inString is None and options.debug is False and options.trips is False:
     askUser=False
     inputString='NONE.'
-elif options.debug is True:
+	sendTrips=False
+elif options.debug is True and options.trips is False and options.inString is None:
     askUser=True
-else:
+	sendTrips=False
+elif options.debug is False and options.trips is True and options.inString is None:
+	askUser=False
+	sendTrips=True
+elif options.inString is not None:
     askUser=False
     inputString=options.inString
-
+else:
+	askUser=True
+	sendTrips=False
 ##################################################################
 #################### 	Functions 	##########################
 ##################################################################

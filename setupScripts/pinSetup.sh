@@ -149,7 +149,7 @@ echo 45 > /sys/class/gpio/export
 echo "low" > /sys/class/gpio/gpio45/direction
 
 ####################################################################################################
-##  BeagleBone P8, pin 12 -> GPIO1_12 (32+12) -> GIO3/BB8_12
+##  BeagleBone P8, pin 12 -> GPIO1_12 (32+12) -> GIO3/BB8_12 -> UART2 INTERRUPT.
 #
 #setup mode
 echo f > /sys/kernel/debug/omap_mux/gpmc_ad12
@@ -194,7 +194,7 @@ echo 46 > /sys/class/gpio/export
 echo "low" > /sys/class/gpio/gpio46/direction
 
 ####################################################################################################
-##  BeagleBone P8, pin 17 -> GPIO0_27 (0+27) -> GIO8/BB8_17
+##  BeagleBone P8, pin 17 -> GPIO0_27 (0+27) -> GIO8/BB8_17 -> USBINSERTED? High if so, low if not.
 #
 #setup mode
 echo f > /sys/kernel/debug/omap_mux/gpmc_ad11
