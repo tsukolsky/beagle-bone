@@ -32,8 +32,8 @@ int main(){
 	//FILE *fShutdownInt;
 	ifstream shutdownInt;
 	//If the edge was set for Rising Edge, will block after open until a new value occurs.
-	//fShutdownInt = fopen("/sys/class/gpio/gpio66/value"); 
-	shutdownInt.open("/sys/class/gpio/gpio66/value");
+	//fShutdownInt = fopen("/sys/class/gpio/gpio35/value"); 
+	shutdownInt.open("/sys/class/gpio/gpio35/value");
 	shutdownInt.close();	
 	cout << "Got an interrupt\n";
 	system("sleep 5");

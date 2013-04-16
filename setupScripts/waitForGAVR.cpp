@@ -33,15 +33,15 @@ void handleInterrupt(void);
 int main(){
 	//Setup files to wait for. Looking for interrupt from GAVR. Should be configured for "echo > rising" ?
 	FILE *fGAVRrequestInt;
-	//ifstream gavrInterrupt;	
+	ifstream gavrInterrupt;	
 	while(true){
 		char buffer[4];
-		fGAVRrequestInt = fopen("/sys/class/gpio/gpio34/value","r");
-		fread(buffer,1,1,fGAVRrequestInt);
-		cout << buffer << endl;
-		//gavrInterrupt.open("/sys/class/gpio/gpio34/value");				//reads as input since "i"fstream	
-		//int num=gavrInterrupt.readByte();
-		//gavrInterrupt.close();
+		//fGAVRrequestInt = fopen("/sys/class/gpio/gpio34/value","r");
+		//fread(buffer,1,1,fGAVRrequestInt);
+		//cout << buffer << endl;
+		gavrInterrupt.open("/sys/class/gpio/gpio34/value");				//reads as input since "i"fstream	
+		gavrInterrupt.read(buffer,2);
+		gavrInterrupt.close();
 		cout << "Got interrupt from GAVR.\n" << endl;
 		system("sleep 2");
 		//handleInterrupt();
