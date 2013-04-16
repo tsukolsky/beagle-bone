@@ -95,7 +95,6 @@ echo 1f > /sys/kernel/debug/omap_mux/gpmc_ad2
 #setup actual GPIO
 echo 34 > /sys/class/gpio/export
 echo "in" > /sys/class/gpio/gpio34/direction
-echo 0 > /sys/class/gpio/gpio34/value
 echo rising > /sys/class/gpio/gpio34/edge
 
 ####################################################################################################
@@ -106,7 +105,6 @@ echo 1f > /sys/kernel/debug/omap_mux/gpmc_ad3
 #setup actual GPIO
 echo 35 > /sys/class/gpio/export
 echo "in" > /sys/class/gpio/gpio35/direction
-echo 0 > /sys/class/gpio/gpio35/value
 echo rising > /sys/class/gpio/gpio35/edge
 
 ####################################################################################################
@@ -117,7 +115,6 @@ echo 1f > /sys/kernel/debug/omap_mux/gpmc_advn_ale
 #setup actual GPIO
 echo 66 > /sys/class/gpio/export
 echo "in" > /sys/class/gpio/gpio66/direction
-echo 0 > /sys/class/gpio/gpio66/value
 echo rising > /sys/class/gpio/gpio35/edge
 
 ####################################################################################################
