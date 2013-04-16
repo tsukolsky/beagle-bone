@@ -50,7 +50,7 @@ if options.debug is None:
 ###########################################################################################
 def placeTime(timeString):
 	#WRITEFILE='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/initTime.txt'
-	WRITEFILE='/home/root/Documents/tmp/nmea/savedTimeFile.txt'
+	WRITEFILE='/home/root/Documents/tmp/gps/savedTimeFile.txt'
 	
 	#Parse the time, then alert the sendTime script that it needs to execute.
 	try:
@@ -69,7 +69,7 @@ def placeTime(timeString):
 		#Initiate program for communication with the Watchdog_AVR with the new time.
 		sendString='S'+hms+'/'+dmy+'.'		
 		logFile.write(sendString+'\n')
-		subprocess.call(["./../CommScripts/commWAVR","-s",sendString]) #put the binary sendTime in the /bin folder.
+		#output=subprocess.call(["./../CommScripts/commWAVR","-s",sendString]) #put the binary sendTime in the /bin folder.
 		print 'Time and date is '+sendString
 		return False
  	else:

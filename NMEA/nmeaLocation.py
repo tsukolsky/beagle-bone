@@ -37,8 +37,8 @@
 ## GPWPL: Waypoint data <not use>
 ###############################################################
 
-READFILE = '/home/root/Documents/tmp/nmea/raw_strings.txt'
-WRITEFILE='/home/root/Documents/tmp/nmea/locations.txt'
+READFILE = '/home/root/Documents/tmp/gps/raw_strings.txt'
+WRITEFILE='/home/root/Documents/tmp/gps/locations.txt'
 
 #read the file
 infile = open(READFILE,'r')

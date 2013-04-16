@@ -258,7 +258,7 @@ else:
 if sendTrips:
 	pid2=os.fork()
 	if pid2==0:		#child
-		args=['/home/root/Documents/beagle-bone.git/CommScripts/commGAVR','-t','true','']
+		args=['/home/root/Documents/beagle-bone.git/CommScripts/SendGAVR','-t','true','']
 		os.execv(args[0],args)
 		
 		
