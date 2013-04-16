@@ -14,11 +14,11 @@
 ###############################################################
 ## Revisions:	
 ##	4/8- Initial build.
-##  4/15- Added startNewTripGPS, deleteGPStrip, changed name of
-##		  deleteTrip to deleteUSBtrip. Now fork/execv functionality
-##		  is done using arguments in tuple format. Does IO cahnging and
-##		  moving when there is a delete. Can't delete current trip. Can't
-## 		  offload the current trip.
+## 	4/15- Added startNewTripGPS, deleteGPStrip, changed name of
+##	      deleteTrip to deleteUSBtrip. Now fork/execv functionality
+##	      is done using arguments in tuple format. Does IO cahnging and
+##	      moving when there is a delete. Can't delete current trip. Can't
+## 	      offload the current trip. (2) FInished delete USBtrip file management 
 ###############################################################
 ## Changes to be made:
 ## 
@@ -38,7 +38,7 @@ USBpath='/dev/USB'
 VirtualPath='/ReCycle/Trips/'
 gpsPath='/ReCycle/gps/'
 tripLocation=USBpath+VirtualPath
-infoFileLocation=tripLocation + '.info'
+gpsLocation=USBpath+gpsPath
 boneGPSpath='/home/root/Documents/tmp/gps/'
 
 #### Send String Routine ####
@@ -52,8 +52,15 @@ def sendString(STRING):
 def getString(waitTime):
 	time.sleep(waitTime)
 	string=''
-	string+=serPort.read(serPort.inWaiting())
+	seconds=time.time()
+	timeout=seconds=+3
+	while string.find('.')!=-1 and (time.time()<timeout):
+		string+=serPort.read(serPort.inWaiting())
 	#print string
+
+	if string.find('.')!=-1:
+		return 'E.'
+
 	return string
 
 def deleteUSBTrip(whichTrip):
@@ -61,19 +68,41 @@ def deleteUSBTrip(whichTrip):
 	rmCommand='rm '+tripLocation+str(whichTrip)+'.txt'
 	os.system(rmCommand)
 	rmCommand='rm '+USBpath+gpsPath+str(whichTrip)+'.txt'
-	os.system(rmCommandd)
-	#Move all the trips down
-	
+	os.system(rmCommand)
+	##Move all the trips down
+	#See how many trips there are. Number of GPS files are also number of Trips
+	filep=gpsLocation+'.info'
+	IF=open(filep,'r')
+	lines=IF.readlines()
+	howManyTrips=int(lines[0].rstrip().strip())
+	#Move
+	counter=0
+	for counter in range(whichTrip+1,howManyTrips+1):
+		OLDGF=gpsLocation+str(counter)+'.txt'
+		OLDTF=tripLocation+str(counter)+'.txt'
+		NEWGF=gpsLocation+str(counter-1)+'.txt'
+		NEWTF=tripLocation+str(counter-1)+'.txt'
+		mvCommand1='mv '+OLDGF+' '+NEWGF
+		mvCommand2='mv '+OLDTF+' '+NEWTF
+		os.system(mvCommand1)
+		os.system(mvCommand2)
 	#Replace number of trips in .info file
-	
+	IF.close()
+	IF=open(filep,'w')
+	IF.write(str(howManyTrips-1))
+	IF.close()
+	filep=tripLocation+'.info'
+	IF=open(filep,'w')
+	IF.write(str(howManyTrips-1))
+	IF.close()
 	
 def deleteGPSTrip(whichTrip):
 	rmCommand='rm '+boneGPSpath+str(whichTrip)+'.txt'
 	os.system(rmCommand)
 	#Now we need to shift all the files down one. ie, if there were 4 trips and we deleted 1, trip 4 needs to go to 3, 3->2, 2->1
 	#See how many trips there are in file before the delete.
-	file=boneGPSpath+'.info'
-	IF=open(file,'r')
+	filep=boneGPSpath+'.info'
+	IF=open(filep,'r')
 	lines=IF.readlines()
 	howManyTrips=int(lines[0].rstrip().strip())		#.rstrip gets rid of \n, strip gets rid of whitespace on left and right
 	#Number of trips we need to move down is howManyTrips-whichTrip
@@ -86,7 +115,7 @@ def deleteGPSTrip(whichTrip):
 		
 	#Now that everything has been shifted down, rewreite how many GPS files are actually in this
 	IF.close()
-	OF=open(file,'w')
+	OF=open(filep,'w')
 	OF.write(str(howManyTrips-1))
 	OF.close()
 		
@@ -94,16 +123,17 @@ def deleteGPSTrip(whichTrip):
 def startNewTripGPS(whichTrip):
 	##Need to halt myGpsPipe, then move "CURRENT.txt" into the current trip we are working on.
 	#First must stop GPS pipe process
-	PROCNAME="myGpsPipe"
+	PROCNAME='myGpsPipe'
+	PROCNAME2='/home/root/Documents/beagle-bone.git/NMEA/myGpsPipe'
 	for proc in psutil.process_iter():
 		if proc.name==PROCNAME:
 			proc.kill()
 	
 	#Process is killed, need to move CURRENT.txt into <trip>.txt. The trip number we are putting to is whichTrip
-	mvCommand="mv "+boneGPSpath+'CURRENT.txt'+boneGPSpath+str(whichTrip)+'.txt'
+	mvCommand="mv "+boneGPSpath+'CURRENT.txt '+boneGPSpath+str(whichTrip)+'.txt'
 	os.system(mvCommand)
-	file=boneGPSpath+'.info'
-	OF=open(file,'w')
+	filep=boneGPSpath+'.info'
+	OF=open(filep,'w')
 	OF.write(str(whichTrip))		#Which trip actually represents how many trips are there.
 	OF.close()						
 
@@ -132,36 +162,44 @@ except:
 
 ### Start functionality here ###
 ##Find out how many trips are in data.
-
-readFile=open(infoFileLocation,'r')
+tripInfoFile=tripLocation+'.info'
+readFile=open(tripInfoFile,'r')
 lines=readFile.readlines()
-tripNumber=int(lines[0][0])		##Grabs the first character/int on first line which is number of trips that we are looking at.
+tripNumber=int(lines[0].rstrip())		##Grabs the first line, rips any new line, this is number of trips that we are looking at.
+readFile.close()
+
+##Set up bools, state for machine, response
 communicating=True
 flagError=False
 state=0
 response=''
+
+##Open a trip file just in case we get trip data. If we don't, closes and deletes the file.
 tripFilePath=tripLocation+str(tripNumber+1)+'.txt'		#newTripNumber=tripNumber+1
 tripFile=open(tripFilePath,'w')
 
 while communicating:
+	##INitial ACK back
 	if (state==0):
 		sendString("A.")
 		state=1
+	##Wait for a command, once a string is had go to state 2
 	elif (state==1):
 		response = getString(200.0/1000.0)
 		state=2
+	##Evaulate what was sent back.
 	elif (state==2): #Only time this sucker doesn't exit is when we are receiving Trip data.
 		if (response=='E.'):
 			print "Error receiving on port " + serialPort
 			communicating=False
 		elif (response=='NT.'):
-			sendTrips=True								#Need to send them trips, start the transmission to GAVR script.
+			sendTrips=True							#Need to send them trips, start the transmission to GAVR script.
 			sendString(response)						#Respond with appropriate ack
 			communicating=False
 		elif (response[0]=='D'):						#User wants to delete a trip on the USB, see which one then do it
 			splitResponse=response.split('.')
 			sendString(response)
-			deleteUSBTrip(int(splitResponse[1:]))			#Call delete trips with the appropriate trip number
+			deleteUSBTrip(int(splitResponse[0][1:]))			#Call delete trips with the appropriate trip number
 			communicating=False
 		elif (response=='T.'):							#Sending us trip data.
 			state=3
@@ -169,7 +207,7 @@ while communicating:
 		elif (response[0]=='D' and response[1]=='B'):	#Delete a GPS trip. File management needed.
 			sendString(response)
 			splitResponse=response.split('.')
-			deleteGPStrip(int(splitResponse[2:]))
+			deleteGPStrip(int(splitResponse[0][2:]))			#first string has letters, second has .
 			communicating=False
 		elif (response=='ST.'):							#Start a new GPS trip
 			sendString(response)
@@ -178,9 +216,11 @@ while communicating:
 		else:
 			sendString("E.")
 			communicating=False
+	##Trip data is being sent, get the string with data. First two characters describe what it is.	
 	elif (state==3):
 		response=getString(200.0/1000.0)
 		state=4
+	##If the string was 'D.', we have received all trip data. If not, write to the file
 	elif (state==4):
 		if (response=='E.'):						#There was an error
 			print "Error receiving trip on port " + serialPort
@@ -198,10 +238,11 @@ while communicating:
 
 ##end while communicating
 tripFile.close()
-readFile.close()
+
+##If we were in the receive STring state and there wasn't an error, write correct number of trips to file.
 if state==4 and not flagError:
 	#Put that there is 1 more file in the USB tirp files. This is used for number of GPS files as well.
-	echoCommand="echo "+str(tripNumber+1)+" > " + infoFileLocation
+	echoCommand="echo "+str(tripNumber+1)+" > " + tripInfoFile
 	os.system(echoCommand)			#update the .info file	
 	##Put the GPS file onto the USB
 	mvCommand="mv /home/root/Documents/tmp/gps/"+str(tripNumber+1)+".txt "+USBpath+gpsPath

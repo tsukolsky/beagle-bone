@@ -83,16 +83,17 @@ except:
 	exit()
 
 ### Start functionality here ###
+#setup bools and variables
 communicating=True
 whichTrip=0
-##Find out how many trips there are
-path=USBpath+VirtualPath+"*.txt"
-tripFiles=glob.glob(path)			#trip files now has all the file names
 response=''
 state=0
-successful=True
+successful=True			#only needed in state 4, doesn't need to be assigned in states 0->3, reset in state 5
+#Get the trip files "1.txt", "2.txt", etc...
+path=USBpath+VirtualPath+"*.txt"
+tripFiles=glob.glob(path)			#tripFiles now has all the file names
 
-
+##Start state machine.
 while communicating:
 	if (state=0):
 		#Send Interrupt to GAVR
@@ -105,25 +106,25 @@ while communicating:
 		response=getString(200.0/1000.0)
 		state=2
 	elif (state=2):
-		#If we got the 'A.', we got the right thing. Send trip data.
+		#If we got the 'A.', we got the right thing. Send trip data. OTherwise go to state 5 for Error.
 		if (response="A."):
 			state=3
 		else:
 			state=5
 	elif (state=3):		
-		##Sending Trips to him. Read the Start Days and Start Year
-		for file in tripFiles:
+		##Sending Trips to him. Read the Start Days, line 4, and Start Year line 5
+		for aFile in tripFiles:
 			##open the file
-			FILE=open(file,'r')
+			FILE=open(aFile,'r')
 			lines=FILE.readlines()
-			startDays='T'+lines[4].split('\n')[0]+'.'			#Get rid of new line, add .
-			startYears='T'+lines[5].split('\n')[0]+'.'
-			sendString(startDays)								#Send the string, wait for response
-			response=getString(300.0/1000.0)
+			startDays='T'+lines[4][2:].rstrip().strip()+'.'			#take of first two characters,Strip new line, then white space. Add '.'
+			startYears='T'+lines[5][2:].rstrip().strip()+'.'		#Same as ^^
+			sendString(startDays)						#Send the string, wait for response
+			response=getString(200.0/1000.0)
 			if response=='A.':
 				##One down, now send years
 				sendString(startYears)
-				response=getString(300.0/1000.0)
+				response=getString(200.0/1000.0)
 				if (response!='A.'):
 					##iF there was an error, go to state 5 and wait. Otherwise, go to next file
 					sendString("E.")
@@ -136,6 +137,8 @@ while communicating:
 				state=5
 				successful=False
 				break
+			#Close the file
+			FILE.close()	
 		##Came out of for loop from eiether all files read or break, if successful, it was all files. Done
 		if successful:
 			state=4
@@ -152,6 +155,7 @@ while communicating:
 		communicating=False
 		
 
+exit()
 		
 		
 	
