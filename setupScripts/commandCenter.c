@@ -31,12 +31,12 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-void error(const char *msg);
-void *gpsThread(void *args);
-bool pShutdown(void);
-bool pGAVRrequest(void);
-bool pUSBupdate(void);
-bool pPinSetup(void);
+void error(const char *msg);	
+void *gpsThread(void *args);	//not needed, taken care of in initial script and any call of ReceiveGAVR
+bool pShutdown(void);		//replaced with "waitingForShutdown.cpp"
+bool pGAVRrequest(void);	//replaced with "waitForReceive.cpp"
+bool pUSBupdate(void);		//not needed
+bool pPinSetup(void);		//not needed, taken care of in initial script.
 
 int pidPinSetup, pidShutdown, pidGAVRrequest,pidUSBupdate;
 bool updatedUSB=false,calledShutdown=false,receivingGAVR=false;						//blocking bool to keep from calling update USB script over and over.	

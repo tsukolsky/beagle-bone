@@ -74,7 +74,8 @@ echo 2c > /sys/kernel/debug/omap_mux/lcd_data9
 echo f > /sys/kernel/debug/omap_mux/gpmc_ad6
 #setup actual GPIO
 echo 38 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpio38/direction
+echo "out" > /sys/class/gpio/gpio38/direction
+echo 0 > /sys/class/gpio/gpio38/value
 
 ###################################################################################################
 ## BeagleBone P8, pin 4 -> GPIO1_7 (32+7) -> INT1 on GAVR
@@ -83,7 +84,8 @@ echo "low" > /sys/class/gpio/gpio38/direction
 echo f > /sys/kernel/debug/omap_mux/gpmc_ad7	
 #setup actual GPIO
 echo 39 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpio39/direction
+echo "out" > /sys/class/gpio/gpio39/direction
+echo 0 > /sys/class/gpio/gpio39/value
 
 ####################################################################################################
 ##  BeagleBone P8, pin 5 -> GPIO1_2 (32+2) -> BONE_INT/GAVRO
@@ -92,7 +94,9 @@ echo "low" > /sys/class/gpio/gpio39/direction
 echo 1f > /sys/kernel/debug/omap_mux/gpmc_ad2
 #setup actual GPIO
 echo 34 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpio34/direction
+echo "in" > /sys/class/gpio/gpio34/direction
+echo 0 > /sys/class/gpio/gpio34/value
+echo rising > /sys/class/gpio/gpio34/edge
 
 ####################################################################################################
 ##  BeagleBone P8, pin 6 -> GPIO1_3 (32+3) -> BONE_INT/WAVRO
@@ -101,16 +105,20 @@ echo "low" > /sys/class/gpio/gpio34/direction
 echo 1f > /sys/kernel/debug/omap_mux/gpmc_ad3
 #setup actual GPIO
 echo 35 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpio35/direction
+echo "in" > /sys/class/gpio/gpio35/direction
+echo 0 > /sys/class/gpio/gpio35/value
+echo rising > /sys/class/gpio/gpio35/edge
 
 ####################################################################################################
 ##  BeagleBone P8, pin 7 -> GPIO2_2 (64+2) -> BB_INT (about to be shut down).
 #
 #setup mode
-echo f > /sys/kernel/debug/omap_mux/gpmc_advn_ale
+echo 1f > /sys/kernel/debug/omap_mux/gpmc_advn_ale
 #setup actual GPIO
 echo 66 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpio66/direction
+echo "in" > /sys/class/gpio/gpio66/direction
+echo 0 > /sys/class/gpio/gpio66/value
+echo rising > /sys/class/gpio/gpio35/edge
 
 ####################################################################################################
 ##  BeagleBone P8, pin 8 -> GPIO2_3 (64+3) -> WIO6/BB8_8
