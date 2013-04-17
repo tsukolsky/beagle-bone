@@ -1,5 +1,5 @@
 /*******************************************************************************\
-| waitForGAVR.c
+| gavrInterrupt.c
 | Author: Todd Sukolsky
 | Initial Build: 4/16/2013
 | Last Revised: 4/16/2013
@@ -35,16 +35,21 @@ int main(){
 	pfd.events = POLLPRI;
 	pfd.revents = 0;
 	//Lead is what the current pin is set to, ready is how many times this guy has been activated.
-	int lead, ready;
+	int lead,lastLead,ready;
+	lastLead=get_lead(fd);
 	while (1) {
-		int ready = poll(&pfd, 1, -1);
-		printf("ready: %d\n", ready);
-		if (pfd.revents != 0 /*&& (lead=get_lead(fd)) == 1*/) {	//if an event happened and the pin is a 1, that means we got an interrupt from GAVR
-			printf("\tThis happend: %d\n",pfd.revents);
+		ready = poll(&pfd, 1, -1);
+	//	printf("ready: %d\n", ready);
+		if (pfd.revents != 0) {	//if an event happened and the pin is a 1, that means we got an interrupt from GAVR
 			lead=get_lead(fd);
-		}
-		printf("\t\t A: %d\n", lead);
-		//handleInterrupt();
+			if (lead==1 && lastLead==0){
+				printf("\tCalling ReceiveGAVR\n");
+				handleInterrupt();
+			} else {
+	//			printf("Lead=%d, lastLead=%d\n",lead,lastLead);
+			}
+			lastLead=lead;
+		}	
 	}
 	return 0;
 }
@@ -64,7 +69,7 @@ void handleInterrupt(){
 	if (pid2<0){
 		error("Error starting \"RecieveGAVR\" process.\n");
 	} else if (pid2==0){//child process	
-		char *args[]={"/home/root/Documents/beagle-bone.git/CommScripts/ReceiveGAVR",0};
+		char *args[]={"/home/root/Documents/beagle-bone.git/CommScripts/ReceiveGAVR.py",0};
 		execv(args[0],args);
 		error("Unable to exec ReceiveGAVR.");
 	} else { //Parent
