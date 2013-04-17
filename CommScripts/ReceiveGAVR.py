@@ -182,6 +182,7 @@ readFile.close()
 communicating=True
 flagError=False
 state=0
+tripToOffload				#If offloading, GAVR sends "T<tripNumber>." that its' offloading, matches GPS trip number in path.
 response=''
 
 ##Open a trip file just in case we get trip data. If we don't, closes and deletes the file.
@@ -211,8 +212,9 @@ while communicating:
 			sendString(response)
 			deleteUSBTrip(int(splitResponse[0][1:]))			#Call delete trips with the appropriate trip number
 			communicating=False
-		elif (response=='T.'):							#Sending us trip data to put onto USB
+		elif (response[0]=='T'):							#Sending us trip data to put onto USB
 			state=3
+			tripToOffload=int(response.split('.')[0][1:])			
 			sendString(response)						#ack back that we know the trip is coming.
 		elif (response[0]=='D' and response[1]=='B'):	#Delete a GPS trip. File management needed.
 			sendString(response)
@@ -255,8 +257,8 @@ if state==4 and not flagError:
 	echoCommand="echo "+str(tripNumber+1)+" > " + tripInfoFile
 	os.system(echoCommand)			#update the .info file	
 	##Put the GPS file onto the USB. 
-	mvCommand="mv /home/root/Documents/tmp/gps/"+str(tripNumber+1)+".txt "+USBpath+gpsPath
-	os.system(mvCommand)
+	cpCommand="cp /home/root/Documents/tmp/gps/"+str(tripToOffload)+".txt "+USBpath+gpsPath
+	os.system(cpCommand)
 	
 else:
 	removeCommand="rm "+tripLocation+str(tripNumber+1)+".txt"
