@@ -56,9 +56,9 @@ def getString(waitTime):
 	string=''
 	seconds=time.time()
 	timeout=seconds=+3
-	while string.find('.')!=-1 and (time.time()<timeout):
+	#while string.find('.')!=-1 and (time.time()<timeout):
 		#string+=serPort.read(serPort.inWaiting())
-		string=raw_input(">>")
+	string=raw_input(">>")
 	#print string
 
 	if string.find('.')!=-1:
@@ -135,9 +135,13 @@ def startNewTripGPS(whichTrip):
 			print 'myGpsPipe on pid='+str(pid)+',should kill'
 			#os.kill(pid,9)			#command is "kill -9 pid"
 	
-	#Process is killed, need to move CURRENT.txt into <trip>.txt. The trip number we are putting to is whichTrip
-	mvCommand="mv "+boneGPSpath+'CURRENT.txt '+boneGPSpath+str(whichTrip)+'.txt'
+	#Process is killed, need to call nmeaLocation.py to parse for time,date,locations.
+	os.system('/home/root/Documents/beagle-bone.git/NMEA/nmeaLocation.py')
+	#Waits for return, then we can move the CURRENT.txt into the trip folder we want.
+	mvCommand='mv '+boneGPSpath+'PARSED.txt '+boneGPSpath+str(whichTrip)+'.txt'
+	rmCommand='rm '+boneGPSpath+'CURRENT.txt'
 	os.system(mvCommand)
+	os.system(rmCommand)
 	filep=boneGPSpath+'.info'
 	OF=open(filep,'w')
 	OF.write(str(whichTrip))		#Which trip actually represents how many trips are there.
@@ -207,7 +211,7 @@ while communicating:
 			sendString(response)
 			deleteUSBTrip(int(splitResponse[0][1:]))			#Call delete trips with the appropriate trip number
 			communicating=False
-		elif (response=='T.'):							#Sending us trip data.
+		elif (response=='T.'):							#Sending us trip data to put onto USB
 			state=3
 			sendString(response)						#ack back that we know the trip is coming.
 		elif (response[0]=='D' and response[1]=='B'):	#Delete a GPS trip. File management needed.
@@ -250,7 +254,7 @@ if state==4 and not flagError:
 	#Put that there is 1 more file in the USB tirp files. This is used for number of GPS files as well.
 	echoCommand="echo "+str(tripNumber+1)+" > " + tripInfoFile
 	os.system(echoCommand)			#update the .info file	
-	##Put the GPS file onto the USB
+	##Put the GPS file onto the USB. 
 	mvCommand="mv /home/root/Documents/tmp/gps/"+str(tripNumber+1)+".txt "+USBpath+gpsPath
 	os.system(mvCommand)
 	
