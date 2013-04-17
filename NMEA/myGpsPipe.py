@@ -93,7 +93,10 @@ gpsPath='/home/root/Documents/tmp/gps/'
 #Declare where the NMEA strings are going to be written
 nmeaFile=gpsPath+'CURRENT.txt'
 #nmeaFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/NMEA/raw_strings_dev.txt'
-hnmeaFile=open(nmeaFile,'w')	#we are appending to this file
+try:
+	hnmeaFile=open(nmeaFile,'a')	#we are appending to this file just in case there was a restart. if fails, opens it as new since it wasn't an append.
+except:
+	hnmeaFile=open(nmeaFile,'w')
 
 ## Open serial connection that is going to be used for GPS
 UART_PORT=str(options.device)
