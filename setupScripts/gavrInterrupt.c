@@ -39,7 +39,7 @@ int main(){
 	lastLead=get_lead(fd);
 	while (1) {
 		ready = poll(&pfd, 1, -1);
-	//	printf("ready: %d\n", ready);
+		printf("ready: %d\n", ready);
 		if (pfd.revents != 0) {	//if an event happened and the pin is a 1, that means we got an interrupt from GAVR
 			lead=get_lead(fd);
 			if (lead==1 && lastLead==0){
@@ -73,14 +73,14 @@ void handleInterrupt(){
 		//Declare arguments and setup the pipe to see communications
 		char *args[]={"/home/root/Documents/beagle-bone.git/CommScripts/ReceiveGAVR.py",0};
 		//Close STDIN of pipe, duplicate STDOUT and STDERR as the output end of pipe.		
-		close(pipes[0]);
+		/*close(pipes[0]);
 		dup2(pipes[1],1);
-		dup2(pipes[1],2);
+		dup2(pipes[1],2);*/
 		execv(args[0],args);
 		error("Unable to exec ReceiveGAVR.");
 	} else { //Parent
-		dup2(pipes[0],0);
-		close(pipes[1]);
+		/*dup2(pipes[0],0);
+		close(pipes[1]);*/
 		waitpid(pid2,NULL,0);
 	}//end of fork, go back to blocking
 }

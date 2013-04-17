@@ -99,7 +99,7 @@ def deleteUSBTrip(whichTrip):
 	IF.write(str(howManyTrips-1))
 	IF.close()
 	
-def deleteGPSTrip(whichTrip):
+def deleteGPStrip(whichTrip):
 	rmCommand='rm '+boneGPSpath+str(whichTrip)+'.txt'
 	os.system(rmCommand)
 	#Now we need to shift all the files down one. ie, if there were 4 trips and we deleted 1, trip 4 needs to go to 3, 3->2, 2->1
@@ -131,9 +131,9 @@ def startNewTripGPS(whichTrip):
 
 	for line in out.splitlines():
 		if 'myGpsPipe' in line:
-			pid=int(line.split(' ',1)[0])
+			pid=int(line.strip().split(' ')[0])
 			print 'myGpsPipe on pid='+str(pid)+',should kill'
-			#os.kill(pid,9)			#command is "kill -9 pid"
+			os.kill(pid,9)			#command is "kill -9 pid"
 	
 	#Process is killed, need to call nmeaLocation.py to parse for time,date,locations.
 	os.system('/home/root/Documents/beagle-bone.git/NMEA/nmeaLocation.py')
@@ -150,9 +150,10 @@ def startNewTripGPS(whichTrip):
 	#Restart myGpsPipe script.
 	pid=os.fork()
 	if pid==0:
-		args=['/home/root/Documents/beagle-bone.git/NMEA/myGpsPipe','']
+		os.setpgid(0,0)
+		args=['/home/root/Documents/beagle-bone.git/NMEA/myGpsPipe.py','']
 		os.execv(args[0],args)
-		
+	#Don't wait for it
 
 ##Function get's called when there is an interrupt from the GAVR. Need to reply with an "A." then get ready to receive
 ## Set port functions, then open
@@ -177,7 +178,10 @@ readFile=open(tripInfoFile,'r')
 lines=readFile.readlines()
 tripNumber=int(lines[0].rstrip())		##Grabs the first line, rips any new line, this is number of trips that we are looking at.
 readFile.close()
-
+gpsInfoFile=boneGPSpath+'.info'
+readFile2=open(gpsInfoFile,'r')
+gpsInfoLines=readFile2.readlines()
+gpsNumber=int(gpsInfoLines[0].rstrip())
 ##Set up bools, state for machine, response
 communicating=True
 flagError=False
@@ -189,7 +193,7 @@ sendTrips=False
 ##Open a trip file just in case we get trip data. If we don't, closes and deletes the file.
 tripFilePath=tripLocation+str(tripNumber+1)+'.txt'		#newTripNumber=tripNumber+1
 tripFile=open(tripFilePath,'w')
-
+print 'Opened trip file:'+tripFilePath+', for writing'
 while communicating:
 	##INitial ACK back
 	if (state==0):
@@ -208,7 +212,7 @@ while communicating:
 			sendTrips=True							#Need to send them trips, start the transmission to GAVR script.
 			sendString(response)						#Respond with appropriate ack
 			communicating=False
-		elif (response[0]=='D'):						#User wants to delete a trip on the USB, see which one then do it
+		elif (response[0]=='D'and response[1]!='B'):						#User wants to delete a trip on the USB, see which one then do it
 			splitResponse=response.split('.')
 			sendString(response)
 			deleteUSBTrip(int(splitResponse[0][1:]))			#Call delete trips with the appropriate trip number
@@ -224,7 +228,7 @@ while communicating:
 			communicating=False
 		elif (response=='ST.'):							#Start a new GPS trip
 			sendString(response)
-			startNewTripGPS(tripNumber+1)					#send the trip number of the last one which is tripNumber+1
+			startNewTripGPS(gpsNumber+1)					#send the trip number of the last one which is tripNumber+1
 			communicating=False
 		else:
 			sendString("E.")
@@ -241,7 +245,8 @@ while communicating:
 			communicating=False
 			flagError=True
 		elif (response=='D.'):						#We are done communicating
-			communicating=False		
+			communicating=False
+			flagError=False
 		else:
 			sendString(response)
 			strToFile=response+'\n'
@@ -257,11 +262,16 @@ tripFile.close()
 if state==4 and not flagError:
 	#Put that there is 1 more file in the USB tirp files. This is used for number of GPS files as well.
 	echoCommand="echo "+str(tripNumber+1)+" > " + tripInfoFile
+	print 'Echoing '+echoCommand
 	os.system(echoCommand)			#update the .info file	
-	##Put the GPS file onto the USB. 
-	cpCommand="cp /home/root/Documents/tmp/gps/"+str(tripToOffload)+".txt "+USBpath+gpsPath
+	##Put the GPS file onto the USB.
+	cpCommand="cp /home/root/Documents/tmp/gps/"+str(tripToOffload)+".txt "+USBpath+gpsPath+str(tripNumber+1)+'.txt'
+	print 'Copying '+cpCommand
 	os.system(cpCommand)
-	
+	##UPdate the number of GPS files in the folder
+	echoCommand='echo '+str(tripNumber+1)+' > '+USBpath+gpsPath+'.info'
+	print 'Echoing: '+echoCommand
+	os.system(echoCommand)
 else:
 	removeCommand="rm "+tripLocation+str(tripNumber+1)+".txt"
 	os.system(removeCommand)					#if we didn't write anything to the file, make sure it isn't there.
