@@ -270,12 +270,13 @@ else:
 	
 ##Now see if we need to send the trips, or delete something.
 if sendTrips is True:
+	print 'Sending trips'
 	pid2=os.fork()
 	if pid2==0:		#child
 		args=['/home/root/Documents/beagle-bone.git/CommScripts/SendGAVR.py','-t','true','']
 		os.execv(args[0],args)
 	else:
-		print 'Sending trips'	
+		os.waitpid(pid2,0)	
 	
 exit()
 

@@ -69,8 +69,14 @@ def placeTime(timeString):
 		#Initiate program for communication with the Watchdog_AVR with the new time.
 		sendString='S'+hms+'/'+dmy+'.'		
 		logFile.write(sendString+'\n')
-		#output=subprocess.call(["./../CommScripts/commWAVR","-s",sendString]) #put the binary sendTime in the /bin folder.
-		print 'Time and date is '+sendString
+		print 'Time and date is '+sendString+', forking to call SendWAVR'
+		pid=os.fork()
+		if pid==0:
+			args=['/home/root/Documents/beagle-bone.git/CommScripts/SendWAVR','-s',sendString,'']
+			os.execv(args[0],args)
+		else:
+			os.waitpid(pid,0)
+
 		return False
  	else:
 		logFile.write('NONE\n')	#don't need to initiate sending routine
