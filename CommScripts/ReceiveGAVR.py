@@ -34,7 +34,8 @@ import subprocess
 
 serialPort='/dev/ttyO4'
 baudRate=9600
-USBpath='/dev/USB'
+#USBpath='/media/USB'
+USBpath='/media/SUKOLSKY16G'
 VirtualPath='/ReCycle/Trips/'
 gpsPath='/ReCycle/gps/'
 tripLocation=USBpath+VirtualPath
@@ -43,11 +44,12 @@ boneGPSpath='/home/root/Documents/tmp/gps/'
 
 #### Send String Routine ####
 def sendString(STRING):
-	for char in STRING:
+	print STRING
+	#for char in STRING:
 		#print "Writing " + char
-		serPort.write(char)
-		time.sleep(250.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
-
+		#serPort.write(char)
+		#time.sleep(250.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
+		
 #### Get String Routine ####
 def getString(waitTime):
 	time.sleep(waitTime)
@@ -55,7 +57,8 @@ def getString(waitTime):
 	seconds=time.time()
 	timeout=seconds=+3
 	while string.find('.')!=-1 and (time.time()<timeout):
-		string+=serPort.read(serPort.inWaiting())
+		#string+=serPort.read(serPort.inWaiting())
+		string=raw_input(">>")
 	#print string
 
 	if string.find('.')!=-1:
@@ -129,8 +132,8 @@ def startNewTripGPS(whichTrip):
 	for line in out.splitlines():
 		if 'myGpsPipe' in line:
 			pid=int(line.split(' ',1)[0])
-			#print 'Found pid='+str(pid)
-			os.kill(pid,9)			#command is "kill -9 pid"
+			print 'myGpsPipe on pid='+str(pid)+',should kill'
+			#os.kill(pid,9)			#command is "kill -9 pid"
 	
 	#Process is killed, need to move CURRENT.txt into <trip>.txt. The trip number we are putting to is whichTrip
 	mvCommand="mv "+boneGPSpath+'CURRENT.txt '+boneGPSpath+str(whichTrip)+'.txt'
@@ -149,19 +152,19 @@ def startNewTripGPS(whichTrip):
 
 ##Function get's called when there is an interrupt from the GAVR. Need to reply with an "A." then get ready to receive
 ## Set port functions, then open
-serPort = serial.Serial(
-        port=serialPort,
-        baudrate=baudRate,
-        parity=serial.PARITY_NONE,
-        stopbits=serial.STOPBITS_ONE,
-        bytesize=serial.EIGHTBITS
-)
+#serPort = serial.Serial(
+#        port=serialPort,
+#        baudrate=baudRate,
+#        parity=serial.PARITY_NONE,
+#        stopbits=serial.STOPBITS_ONE,
+#        bytesize=serial.EIGHTBITS
+#)
 
-try:
-	serPort.open()
-except: 
-	print "Error opening port" + serialPort
-	exit()
+#try:
+#	serPort.open()
+#except: 
+#	print "Error opening port" + serialPort
+#	exit()
 
 ### Start functionality here ###
 ##Find out how many trips are in data.
