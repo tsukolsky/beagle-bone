@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-##Test script for GAVR
 ###############################################################
 ## SendGAVR.py
 ## Author: Todd Sukolsky
@@ -27,6 +26,8 @@ import os
 import serial
 import optparse
 import glob
+import subprocess
+
 
 ##OPTPARSER INFO
 sendTrips=False
@@ -107,7 +108,7 @@ while communicating:
 		state=2
 	elif (state=2):
 		#If we got the 'A.', we got the right thing. Send trip data. OTherwise go to state 5 for Error.
-		if (response="A."):
+		if (response=='A.'):
 			state=3
 		else:
 			state=5
@@ -117,8 +118,8 @@ while communicating:
 			##open the file
 			FILE=open(aFile,'r')
 			lines=FILE.readlines()
-			startDays='T'+lines[4][2:].rstrip().strip()+'.'			#take of first two characters,Strip new line, then white space. Add '.'
-			startYears='T'+lines[5][2:].rstrip().strip()+'.'		#Same as ^^
+			startDays='T'+lines[4][2:].rstrip().strip()			#take of first two characters,Strip new line, then white space. Add '.'
+			startYears='T'+lines[5][2:].rstrip().strip()		#Same as ^^
 			sendString(startDays)						#Send the string, wait for response
 			response=getString(200.0/1000.0)
 			if response=='A.':

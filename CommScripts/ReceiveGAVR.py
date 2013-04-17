@@ -34,8 +34,8 @@ import subprocess
 
 serialPort='/dev/ttyO4'
 baudRate=9600
-#USBpath='/media/USB'
-USBpath='/media/SUKOLSKY16G'
+USBpath='/media/USB'
+#USBpath='/media/SUKOLSKY16G'
 VirtualPath='/ReCycle/Trips/'
 gpsPath='/ReCycle/gps/'
 tripLocation=USBpath+VirtualPath
@@ -59,12 +59,12 @@ def getString(waitTime):
 	#while string.find('.')!=-1 and (time.time()<timeout):
 		#string+=serPort.read(serPort.inWaiting())
 	string=raw_input(">>")
-	#print string
+#	print string
 
-	if string.find('.')!=-1:
+	if string.find('.')==-1:
 		return 'E.'
-
-	return string
+	else:
+		return string
 
 def deleteUSBTrip(whichTrip):
 	#Should do file IO and move them all down, as well as GPS data.
@@ -182,8 +182,9 @@ readFile.close()
 communicating=True
 flagError=False
 state=0
-tripToOffload				#If offloading, GAVR sends "T<tripNumber>." that its' offloading, matches GPS trip number in path.
+tripToOffload=0				#If offloading, GAVR sends "T<tripNumber>." that its' offloading, matches GPS trip number in path.
 response=''
+sendTrips=False
 
 ##Open a trip file just in case we get trip data. If we don't, closes and deletes the file.
 tripFilePath=tripLocation+str(tripNumber+1)+'.txt'		#newTripNumber=tripNumber+1
@@ -201,7 +202,7 @@ while communicating:
 	##Evaulate what was sent back.
 	elif (state==2): #Only time this sucker doesn't exit is when we are receiving Trip data.
 		if (response=='E.'):
-			print "Error receiving on port " + serialPort
+			print "State 2 Receive Error: Error receiving on port " + serialPort
 			communicating=False
 		elif (response=='NT.'):
 			sendTrips=True							#Need to send them trips, start the transmission to GAVR script.
@@ -227,6 +228,7 @@ while communicating:
 			communicating=False
 		else:
 			sendString("E.")
+			print "State 2 Error: Unknown ACK on port " + serialPort
 			communicating=False
 	##Trip data is being sent, get the string with data. First two characters describe what it is.	
 	elif (state==3):
@@ -235,7 +237,7 @@ while communicating:
 	##If the string was 'D.', we have received all trip data. If not, write to the file
 	elif (state==4):
 		if (response=='E.'):						#There was an error
-			print "Error receiving trip on port " + serialPort
+			print "State 4 Error: Error receiving trip on port " + serialPort
 			communicating=False
 			flagError=True
 		elif (response=='D.'):						#We are done communicating
@@ -267,13 +269,14 @@ else:
 	
 	
 ##Now see if we need to send the trips, or delete something.
-if sendTrips:
+if sendTrips is True:
 	pid2=os.fork()
 	if pid2==0:		#child
-		args=['/home/root/Documents/beagle-bone.git/CommScripts/SendGAVR','-t','true','']
+		args=['/home/root/Documents/beagle-bone.git/CommScripts/SendGAVR.py','-t','true','']
 		os.execv(args[0],args)
-		
-		
+	else:
+		print 'Sending trips'	
+	
 exit()
 
 
