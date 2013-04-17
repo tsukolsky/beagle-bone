@@ -64,15 +64,23 @@ void error(const char *msg){
 handleInterrupt()
 ****************************/
 void handleInterrupt(){
-	int pid2;
+	int pid2, pipes[2];
+	pipe(pipes);
 	pid2=fork();
 	if (pid2<0){
 		error("Error starting \"RecieveGAVR\" process.\n");
 	} else if (pid2==0){//child process	
+		//Declare arguments and setup the pipe to see communications
 		char *args[]={"/home/root/Documents/beagle-bone.git/CommScripts/ReceiveGAVR.py",0};
+		//Close STDIN of pipe, duplicate STDOUT and STDERR as the output end of pipe.		
+		close(pipes[0]);
+		dup2(pipes[1],1);
+		dup2(pipes[1],2);
 		execv(args[0],args);
 		error("Unable to exec ReceiveGAVR.");
 	} else { //Parent
+		dup2(pipes[0],0);
+		close(pipes[1]);
 		waitpid(pid2,NULL,0);
 	}//end of fork, go back to blocking
 }

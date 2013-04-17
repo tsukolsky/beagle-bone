@@ -29,8 +29,8 @@ import sys
 import os
 import serial
 import optparse
-import psutil
 import glob
+import subprocess
 
 serialPort='/dev/ttyO4'
 baudRate=9600
@@ -123,11 +123,14 @@ def deleteGPSTrip(whichTrip):
 def startNewTripGPS(whichTrip):
 	##Need to halt myGpsPipe, then move "CURRENT.txt" into the current trip we are working on.
 	#First must stop GPS pipe process
-	PROCNAME='myGpsPipe'
-	PROCNAME2='/home/root/Documents/beagle-bone.git/NMEA/myGpsPipe'
-	for proc in psutil.process_iter():
-		if proc.name==PROCNAME:
-			proc.kill()
+	p= subprocess.Popen(['ps','-A'],stdout=subprocess.PIPE)
+	out,err=p.communicate()
+
+	for line in out.splitlines():
+		if 'myGpsPipe' in line:
+			pid=int(line.split(' ',1)[0])
+			#print 'Found pid='+str(pid)
+			os.kill(pid,9)			#command is "kill -9 pid"
 	
 	#Process is killed, need to move CURRENT.txt into <trip>.txt. The trip number we are putting to is whichTrip
 	mvCommand="mv "+boneGPSpath+'CURRENT.txt '+boneGPSpath+str(whichTrip)+'.txt'
