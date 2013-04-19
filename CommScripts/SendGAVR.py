@@ -100,9 +100,9 @@ tripFiles=glob.glob(path)			#tripFiles now has all the file names
 while communicating:
 	if (state==0):
 		#Send Interrupt to GAVR
-		os.system("echo high > /sys/class/gpio/gpio44/direction")
+		os.system("echo 1 > /sys/class/gpio/gpio39/value")
 		time.sleep(25.0/1000.0)
-		os.system("echo low > /sys/class/gpio/gpio44/direction")
+		os.system("echo 0 > /sys/class/gpio/gpio39/value")
 		state=1
 	elif (state==1):
 		#wait for 'A.'

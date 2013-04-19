@@ -102,19 +102,12 @@ def sendTime(theString,stopOnOne):			#stopOnOne==askUser
 			ackCompare='E.'				#NOte this is the testing dummy, shouldn't really need this. If there is an error, exit.
 			if (ack==ackCompare):
 				print '--'+ack
+				return False
 				communicating=False
-			elif (ack=='B.'):
-				hour=int(oString[1:3])
-				minute=int(oString[4:6])
-				second=int(oString[7:9])
-				
-				if (hour/24==0) and (minute/60==0) and (second/60==0):
-					return False
-				else:
-					communicating=False
-					return True
   			elif (ack=='A.'):
 				return False
+			else:
+				return True
 
 	        else:		#we probably just had a timeout, setup the connection again
 			return False	
@@ -123,9 +116,9 @@ def sendTime(theString,stopOnOne):			#stopOnOne==askUser
 
 #### Send Interrupt Routine ####
 def sendInterrupt():
-	os.system("echo \"high\" > /sys/class/gpio/gpio39/direction")
+	os.system("echo 1 > /sys/class/gpio/gpio44/value")
 	time.sleep(25.0/1000.0)
-	os.system("echo \"low\" > /sys/class/gpio/gpio39/direction")
+	os.system("echo 0 > /sys/class/gpio/gpio44/value")
 	time.sleep(25.0/1000.0)
 
 #### Send String Routine ####
@@ -149,7 +142,7 @@ def getString(waitTime):
 ####################################################################
 
 #Initializations for the serial port. Bone communicates on UART4, GAVR on UART0
-serialPort='/dev/ttyO4'
+serialPort='/dev/ttyO5'
 baudRate=9600
 
 #Declare file i/o variables
