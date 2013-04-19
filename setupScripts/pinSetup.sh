@@ -127,13 +127,14 @@ echo 67 > /sys/class/gpio/export
 echo "high" > /sys/class/gpio/gpio67/direction
 
 ####################################################################################################
-##  BeagleBone P8, pin 9 -> GPIO2_5 (64+5) -> WIO0/BB8_9
+##  BeagleBone P8, pin 9 -> GPIO2_5 (64+5) -> WIO0/BB8_9 -> BoneOn GPIO to WAVR
 #
 #setup mode
 echo f > /sys/kernel/debug/omap_mux/gpmc_ben0_cle
 #setup actual GPIO
 echo 69 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpio69/direction
+echo "out" > /sys/class/gpio/gpio69/direction
+echo 1 > /sys/class/gpio/gpio69/value
 
 ####################################################################################################
 ##  BeagleBone P8, pin 10 -> GPIO2_4 (64+4) -> WIO1/BB8_10
