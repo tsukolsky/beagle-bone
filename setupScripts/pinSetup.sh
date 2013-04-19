@@ -4,7 +4,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/13
-## Last Revices: 4/10/13
+## Last Revices: 4/19/13
 ########################################################################
 ## Description:
 ##    This script prepares all pins and ports needed for use on the 
@@ -161,7 +161,8 @@ echo "low" > /sys/class/gpio/gpio45/direction
 echo f > /sys/kernel/debug/omap_mux/gpmc_ad12
 #setup actual GPIO
 echo 44 > /sys/class/gpio/export
-echo "low" > /sys/class/gpio/gpio44/direction
+echo "out" > /sys/class/gpio/gpio44/direction
+echo 0 > /sys/class/gpio/gpio44/direction
 
 ####################################################################################################
 ##  BeagleBone P8, pin 13 -> GPIO0_23 (0+23) -> GIO4/BB8_13
@@ -237,6 +238,6 @@ echo 63 > /sys/class/gpio/export
 echo "low" > /sys/class/gpio/gpio63/direction
 
 
-echo "Done with pin settings"
+echo "Done with pin settings" > /dev/kmsg
 exit
 

@@ -12,6 +12,6 @@ $gpsPath=/home/root/Documents/GPS
 ./$setupPath/waitForGAVR
 ./$setupPath/waitForShutdown
 
-echo "Finished setup"
+echo "Finished setup" > /dev/kmsg
 exit
 
