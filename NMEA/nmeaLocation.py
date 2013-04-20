@@ -43,7 +43,7 @@ WRITEFILE='/home/root/Documents/tmp/gps/PARSED.txt'
 #read the file
 infile = open(READFILE,'r')
 writefile = open(WRITEFILE,'w')
-writefile.write('TIME\t\tDATE\t\tLAT\t\tLOG\n\n')
+#writefile.write('TIME\t\tDATE\t\tLAT\t\tLOG\n\n')
 
 #Fin string storing locations, GPGGA
 for lines in infile.readlines():
