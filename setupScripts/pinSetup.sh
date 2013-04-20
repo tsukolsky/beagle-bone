@@ -162,7 +162,7 @@ echo f > /sys/kernel/debug/omap_mux/gpmc_ad12
 #setup actual GPIO
 echo 44 > /sys/class/gpio/export
 echo "out" > /sys/class/gpio/gpio44/direction
-echo 0 > /sys/class/gpio/gpio44/direction
+echo 0 > /sys/class/gpio/gpio44/value
 
 ####################################################################################################
 ##  BeagleBone P8, pin 13 -> GPIO0_23 (0+23) -> GIO4/BB8_13

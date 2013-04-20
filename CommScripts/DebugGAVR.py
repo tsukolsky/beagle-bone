@@ -42,18 +42,18 @@ parser.add_option('-D',action="store_true", dest="debug",default=False,help='Use
 (options, args) = parser.parse_args()
 
 if options.inString is None and options.debug is False and options.trips is False:
-    askUser=False
-    inputString='NONE.'
-	sendTrips=False
+   	askUser=False
+	inputString='NONE.'
+    	sendTrips=False
 elif options.debug is True and options.trips is False and options.inString is None:
-    askUser=True
+    	askUser=True
 	sendTrips=False
 elif options.debug is False and options.trips is True and options.inString is None:
 	askUser=False
 	sendTrips=True
 elif options.inString is not None:
-    askUser=False
-    inputString=options.inString
+    	askUser=False
+    	inputString=options.inString
 else:
 	askUser=True
 	sendTrips=False
@@ -106,8 +106,6 @@ def sendTime(theString,stopOnOne):			#stopOnOne==askUser
 				communicating=False
   			elif (ack=='A.'):
 				return False
-			else:
-				return True
 
 	        else:		#we probably just had a timeout, setup the connection again
 			return False	
@@ -125,6 +123,7 @@ def sendInterrupt():
 def sendString(STRING):
 	for char in STRING:
 		serPort.write(char)
+		print char
 		time.sleep(250.0/1000.0)
 	
 #### Get String Routine ####
@@ -146,7 +145,7 @@ serialPort='/dev/ttyO5'
 baudRate=9600
 
 #Declare file i/o variables
-logFile='/home/root/tmp/logs/startupLog.txt'
+logFile='/home/root/Documents/tmp/logs/startupLog.txt'
 
 #logFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/startupLog.txt'		#what we are going to print to for log
 try:
