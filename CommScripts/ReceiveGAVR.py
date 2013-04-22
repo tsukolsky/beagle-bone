@@ -232,7 +232,7 @@ while communicating:
 		elif (response.find('DU')!=-1):						#User wants to delete a trip on the USB, see which one then do it
 			splitResponse=response.split('.')
 			sendString(response)
-			deleteUSBTrip(int(splitResponse[0][1:]))			#Call delete trips with the appropriate trip number
+			deleteUSBTrip(int(splitResponse[0][2:]))			#Call delete trips with the appropriate trip number
 			communicating=False
 		elif (response[0]=='T'):							#Sending us trip data to put onto USB
 			state=3
