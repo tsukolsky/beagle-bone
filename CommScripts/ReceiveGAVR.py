@@ -58,7 +58,10 @@ def getString(waitTime):
 	seconds=time.time()
 	string=serPort.read(serPort.inWaiting())
 	print string
-	return string
+	if string:
+		return string
+	else:
+		exit()
 
 def deleteUSBTrip(whichTrip):
 	#Should do file IO and move them all down, as well as GPS data.
@@ -231,10 +234,10 @@ while communicating:
 			sendString(response)
 			deleteUSBTrip(int(splitResponse[0][1:]))			#Call delete trips with the appropriate trip number
 			communicating=False
-		elif (response.find('T')!=-1):							#Sending us trip data to put onto USB
+		elif (response[0]=='T'):							#Sending us trip data to put onto USB
 			state=3
 			tripToOffload=int(response.split('.')[0][1:])			
-			sendString(response)						#ack back that we know the trip is coming.
+			sendString('T.')						#ack back that we know the trip is coming.
 		elif (response.find('DB')!=-1):	#Delete a GPS trip. File management needed.
 			splitResponse=response.split('.')
 			deleteGPStrip(int(splitResponse[0][2:]))			#first string has letters, second has .
@@ -250,7 +253,7 @@ while communicating:
 			communicating=False
 	##Trip data is being sent, get the string with data. First two characters describe what it is.	
 	elif (state==3):
-		response=getString(200.0/1000.0)
+		response=getString(400.0/1000.0)
 		state=4
 	##If the string was 'D.', we have received all trip data. If not, write to the file
 	elif (state==4):
@@ -258,11 +261,13 @@ while communicating:
 			print "State 4 Error: Error receiving trip on port " + serialPort
 			communicating=False
 			flagError=True
-		elif (response=='D.'):						#We are done communicating
+		elif (response.find('D.')!=-1):						#We are done communicating
 			communicating=False
 			flagError=False
+			writeToUSB(tripStrings)
+			print "Got done. Exiting."
 		else:
-			sendString(response)
+			sendString(response[:2]+'.')
 			strToFile=response+'\n'
 			tripStrings.append(strToFile)				#Added to the file.
 			state=3							#Go back to state 3 and get the next field
