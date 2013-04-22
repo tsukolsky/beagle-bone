@@ -42,12 +42,8 @@ int main(){
 		printf("ready: %d\n", ready);
 		if (pfd.revents != 0) {	//if an event happened and the pin is a 1, that means we got an interrupt from GAVR
 			lead=get_lead(fd);
-			if (lead==1 && lastLead==0){
-				printf("\tCalling ReceiveGAVR\n");
-				handleInterrupt();
-			} else {
-	//			printf("Lead=%d, lastLead=%d\n",lead,lastLead);
-			}
+			printf("Calling interrupt handler()");
+			handleInterrupt();
 			lastLead=lead;
 		}	
 	}

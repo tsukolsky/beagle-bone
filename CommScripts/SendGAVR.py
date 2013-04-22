@@ -52,22 +52,26 @@ baudRate=9600
 USBpath='/media/USB'
 VirtualPath='/ReCycle/Trips/'
 gpsPath='/ReCycle/gps/'
+log='/home/root/Documents/tmp/SendGAVRlog.txt'
+OF=open(log,'w')
 
 #### Send String Routine ####
 def sendString(STRING):
-#	for char in STRING:
-		#print "Writing " + char
-#		serPort.write(char)
-#		time.sleep(250.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
-	print STRING
+	for char in STRING:
+		string= "Writing " + char
+		OF.write(string+'\n')
+		serPort.write(char)
+		time.sleep(300.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
+#	print STRING
 
 #### Get String Routine ####
 def getString(waitTime):
 	time.sleep(waitTime)
 	string=''
-	#string+=serPort.read(serPort.inWaiting())
-	#print string
-	string=raw_input(">>")
+	string+=serPort.read(serPort.inWaiting())
+	output='GOT:'+string+'\n'
+	OF.write(output)
+#	string=raw_input(">>")
 	return string
 
 ## Set port functions, then open
@@ -106,14 +110,17 @@ while communicating:
 		state=1
 	elif (state==1):
 		#wait for 'A.'
-		response=getString(200.0/1000.0)
+		response=getString(500.0/1000.0)
 		state=2
+		response.strip()
 	elif (state==2):
 		#If we got the 'A.', we got the right thing. Send trip data. OTherwise go to state 5 for Error.
-		if (response=='A.'):
+		if (response.find('A.')!=-1):
 			state=3
+			OF.write('Got initial A.\n')
 		else:
 			state=5
+			OF.write('Error on initial A.\n')
 	elif (state==3):		
 		##Sending Trips to him. Read the Start Days, line 4, and Start Year line 5
 		for aFile in tripFiles:
@@ -126,14 +133,17 @@ while communicating:
 				stringToSend=startDays+'/'+startYears
 				sendString(stringToSend)						#Send the string, wait for response
 				response=getString(200.0/1000.0)
-				if response!='A.':
+				response.strip()
+				if (response.find('A.')==-1):
+					OF.write('Error on intermediate A.\n')
 					##Error on first send, go to state 5 and wait, then try again
 					sendString("E.")
 					state=5
 					successful=False
 					break
-				#Close the file
-				FILE.close()	
+			#Close the file
+			FILE.close()
+			time.sleep(300.0/1000.0)
 		##Came out of for loop from eiether all files read or break, if successful, it was all files. Done
 		if successful:
 			state=4
@@ -143,13 +153,13 @@ while communicating:
 		communicating=False
 	elif (state==5):
 		##Error. Wait for 10 seconds then try aggain. Reset state and successful
-		time.sleep(10)
-		state=0
+		OF.write("Error, waiting for next ask.\n")
+		communicating=False
 		successful=True			##reset to allow for new communication
 	else:
 		communicating=False
 		
-
+OF.close()
 exit()
 		
 		
