@@ -6,7 +6,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013
-## Last Revised: 4/8/2013
+## Last Revised: 4/22/2013
 ###############################################################
 ## Description:
 ##    This module is responisble for communication between the GAVR
@@ -17,6 +17,13 @@
 ##	4/8-- Edited to match commWAVR parameters that have been
 ##	      proven to work. Must send time with beginning 'S'
 ##	      then two characters for each time param, date can be single.
+##      4/17-4/22: Edited to function as debug protocol with the GAVR.
+##	      this serves as a replacement fr the LCD screen as that is 
+##	      still being tweaked and worked on. The functionality of this 
+##	      can be used in debug mode, however it is meant for single string
+##		purporses. It can initiate delete protocol on both GAVR and USB,
+##		view protocol for both USB and GAVR trips, and start new trips.
+##		All output messages are printed to the terminal.
 ###############################################################
 ## Changes to be made:
 ##     

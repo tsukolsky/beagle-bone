@@ -2,7 +2,7 @@
 | shutdownInterrupt.c
 | Author: Todd Sukolsky
 | Initial Build: 4/15/2013
-| Last Revised: 4/16/2013
+| Last Revised: 4/22/2013
 |================================================================================
 | Description: This module is a spin-off of commandCenter.c. It is used to 
 |	alert the BeagleBone that the GAVR is sending it something. Blocks on read.
@@ -11,6 +11,7 @@
 | Revisions: 4/15: Initial build/take.
 |	     4/16: Added blocking. Should block when there we open the file, as long as it's set to rising > edge.
 |		   Changed to work with online script. This script works and is complete.
+|	     4/22: Took out all debugging printing. Waits for a poll change then kills the BeagleBone.
 |================================================================================
 | *NOTES:Polling example found at: http://bwgz57.wordpress.com/tag/beaglebone/
 \*******************************************************************************/
@@ -50,7 +51,7 @@ int main(){
 				time(&timer);
 				tm_info=localtime(&timer);
 				strftime(buffer,25,"%Y:%m:%d%H:%M:%S",tm_info);
-				printf("Calling halt at %s.\n",buffer);
+	//			printf("Calling halt at %s.\n",buffer);
 				system("halt");
 			} else {
 	//			printf("Change, lead=%d, lastLead=%d\n",lead,lastLead);

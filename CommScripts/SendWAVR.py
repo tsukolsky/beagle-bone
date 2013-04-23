@@ -7,7 +7,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013
-## Last Revised: 4/8/2013
+## Last Revised: 4/22/2013
 ###############################################################
 ## Description:
 ##    This module is responisble for setting the Watchdog AVR's
@@ -22,6 +22,7 @@
 ##	3/31- Changed functionality to match the board we have and
 ##	      that time and date are both sent.
 ##  4/8-- Tweaked for it to work standalone on Bone.
+##	4/22- Changed all log files to go to an appended log file in tmp/logs
 ###############################################################
 ## Changes to be made:
 ##     Probably going to add an outer loop for the send function;
@@ -56,6 +57,24 @@ elif options.debug is True:
 else:
     askUser=False
     inputString=options.inString
+
+
+
+#Set up log file for output
+try:
+	IF=open('home/root/Documents/tmp/logs/SendWAVR/.info','r')
+except:
+	os.system('echo 0 > /home/root/Documents/tmp/logs/SendWAVR/.info')
+	IF=open('home/root/Documents/tmp/logs/SendWAVR/.info','r')
+
+lines=IF.readlines()
+IF.close()
+number=int(lines[0].rstrip().strip())
+theLog='/home/root/Documents/tmp/logs/SendWAVR/'+number+'.txt'
+number+=1
+echoCm='echo '+str(number)+' > /home/root/Documents/tmp/logs/SendWAVR/.info'
+os.system(echoCm)
+LOGFILE=open(theLog,'w')
 
 ##################################################################
 #################### 	Functions 	##########################
@@ -101,8 +120,9 @@ def sendTime(theString,stopOnOne):				#stopOnOne==askUser-->if true, don't keep 
 		if (time.time()-start)<7 and ack=='':		#longer timeout, only 2 from first + 4 now is full
                         ack=getString(500.0/1000.0)     	#check every 500ms	
 			ackCompare='A'+oString[1:]		#this changed to oString[1:]--4/8
+			ack.strip().rstrip()
 			if (ack==ackCompare):
-				print '--'+ack
+				LOGFILE.write('--'+ack+'\n')
 				communicating=False
 			elif (ack=='B.'):
 				## Check the hour, minute, second to make sure they are correct.
@@ -136,7 +156,7 @@ def sendInterrupt():
 #### Send String Routine ####
 def sendString(STRING):
 	for char in STRING:
-		print "Writing " + char
+		LOGFILE.write('Writing '+char+'\n')
 		serPort.write(char)
 		time.sleep(250.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
 	
@@ -145,7 +165,7 @@ def getString(waitTime):
 	time.sleep(waitTime)
 	string=''
 	string+=serPort.read(serPort.inWaiting())
-	print string
+	LOGFILE.write(string+'\n')
 	return string
 
 
@@ -156,16 +176,6 @@ def getString(waitTime):
 #Initializations for the serial port for WAVR, on UART1 for bone, UART0 for WAVR
 serialPort='/dev/ttyO1'
 baudRate=9600
-
-#Declare file i/o variables
-logFile='/home/root/Documents/tmp/logs/startupLog.txt'
-
-#logFile='/home/todd/Documents/GitHubProjects/beagle-bone.git/initialSetupScripts/startupLog.txt'		#what we are going to print to for log
-
-try:
-    outputSuccess=open(logFile,'a')
-except:
-    outputSuccess=open(logFile,'w+')
 
 ## Set port functions, then open
 serPort = serial.Serial(
@@ -178,7 +188,7 @@ serPort = serial.Serial(
 try:
 	serPort.open()
 except:
-	print "Error opening port" + serialPort
+	LOGFILE.write('Error opening port'+serialPort+'\n')
 	exit()
 
 ### MAIN FUNCTIONALITY HERE ###
@@ -200,5 +210,5 @@ while not sent:
 			time.sleep(750.0/1000.0)
 
 #Write to a log that I am done
-outputSuccess.write("init_time...DONE\n")
+LOGFILE.write("init_time...DONE\n")
 exit()

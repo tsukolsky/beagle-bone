@@ -1,12 +1,12 @@
 #!/bin/bash
 
-$setupPath=/home/root/Documents/setupScripts
-$gpsPath=/home/root/Documents/GPS
-
+$setupPath=/home/root/Documents/beagle-bone.git/setupScripts
+$gpsPath=/home/root/Documents/beagle-bone.git/NMEA
+$usbPath=/home/root/Documents/
 ##Call pin setup, start GPS pipe
 ./$setupPath/pinSetup.sh
 ./$gpsPath/myGpsPipe.py
-#./$usbPath/waitForUSB
+./$setupPath/mountUSB.sh
 
 ##Start watchdog scripts.
 ./$setupPath/waitForGAVR

@@ -6,7 +6,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 4/8/2013
-## Last Revised: 4/15/2013
+## Last Revised: 4/22/2013
 ###############################################################
 ## Description:
 ##    This module is responisble for communication between the GAVR
@@ -19,6 +19,16 @@
 ##	      is done using arguments in tuple format. Does IO cahnging and
 ##	      moving when there is a delete. Can't delete current trip. Can't
 ## 	      offload the current trip. (2) FInished delete USBtrip file management 
+##  	4/22:	Changed a lot of the functionality from state 3 and forward. Took out
+##		debugging with interaction and replaced with communication to GAVR through
+##		serial port. Fixed path bugs that were causing faulty delete USB trips
+##		and changed idea of opening a trip folderin the beginning to receiving strings
+##		in an array,passing the array to a writeUSB function, then opening the file then
+##		. Uses rstrip and strip protocols to delete extra whitespace in received string,
+##		then looks for the correct string and if it's there, sends what the GAVR tried 
+##		to send last since this serial port acts as a continuous buffer when the program is running.
+##		All receive protocols work, all output is printed to a log file inthe bone, ~/Documents/tmp/logs/lastReceive.log
+##		with a time stamp.
 ###############################################################
 ## Changes to be made:
 ## 
@@ -35,19 +45,34 @@ import subprocess
 serialPort='/dev/ttyO4'
 baudRate=9600
 USBpath='/media/USB'
-#USBpath='/media/SUKOLSKY16G'
 VirtualPath='/ReCycle/Trips/'
 gpsPath='/ReCycle/gps/'
 tripLocation=USBpath+VirtualPath
 gpsLocation=USBpath+gpsPath
 boneGPSpath='/home/root/Documents/tmp/gps/'
 tripToOffload=0				#If offloading, GAVR sends "T<tripNumber>." that its' offloading, matches GPS trip number in path.
+#See how many files are inthe folder
+try:
+	IF=open('home/root/Documents/tmp/logs/ReceiveGAVR/.info','r')
+except:
+	os.system('echo 0 > /home/root/Documents/tmp/logs/ReceiveGAVR/.info')
+	IF=open('home/root/Documents/tmp/logs/ReceiveGAVR/.info','r')
+
+lines=IF.readlines()
+IF.close()
+number=int(lines[0].rstrip().strip())
+theLog='/home/root/Documents/tmp/logs/ReceiveGAVR/'+lines[0].rstrip().strip()+'.txt'
+number+=1
+echoCm='echo '+str(number)+' > /home/root/Documents/tmp/logs/ReceiveGAVR/.info'
+os.system(echoCm)
+LOGFILE=open(theLog,'w')
+
 
 #### Send String Routine ####
 def sendString(STRING):
 #	print STRING
 	for char in STRING:
-		print "Writing " + char
+		LOGFILE.write('Writing '+char+'\n')
 		serPort.write(char)
 		time.sleep(250.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
 		
@@ -57,7 +82,7 @@ def getString(waitTime):
 	string=''
 	seconds=time.time()
 	string=serPort.read(serPort.inWaiting())
-	print string
+	LOGFILE.write('Got'+string+'\n')
 	if string:
 		return string
 	else:
@@ -167,15 +192,15 @@ def writeToUSB(strings):
 	
 	#Put that there is 1 more file in the USB tirp files. This is used for number of GPS files as well.
 	echoCommand="echo "+str(tripNumber)+" > " + tripInfoFile
-	print 'Echoing '+echoCommand
+	LOGFILE.write('Echoing '+echoCommand)
 	os.system(echoCommand)			#update the .info file	
 	##Put the GPS file onto the USB.
 	cpCommand="cp /home/root/Documents/tmp/gps/"+str(tripToOffload)+".txt "+USBpath+gpsPath+str(tripNumber)+'.txt'
-	print 'Copying '+cpCommand
+	LOGFILE.write('Copying '+cpCommand)
 	os.system(cpCommand)
 	##UPdate the number of GPS files in the folder
 	echoCommand='echo '+str(tripNumber)+' > '+USBpath+gpsPath+'.info'
-	print 'Echoing: '+echoCommand
+	LOGFILE.write('Echoing: '+echoCommand)
 	os.system(echoCommand)
 
 
@@ -193,7 +218,7 @@ serPort = serial.Serial(
 try:
 	serPort.open()
 except: 
-	print "Error opening port" + serialPort
+	LOGFILE.write('Error opening port'+serialPort)
 	exit()
 
 ### Start functionality here ###
@@ -223,7 +248,7 @@ while communicating:
 	##Evaulate what was sent back.
 	elif (state==2): #Only time this sucker doesn't exit is when we are receiving Trip data.
 		if (response=='E.'):
-			print "State 2 Receive Error: Error receiving on port " + serialPort
+			LOGFILE.write('State 2 Receive Error: Error receiving on port '+serialPort+'\n')
 			communicating=False
 		elif (response.find('NT.')!=-1):
 			sendTrips=True							#Need to send them trips, start the transmission to GAVR script.
@@ -249,7 +274,7 @@ while communicating:
 			communicating=False
 		else:
 			sendString("E.")
-			print "State 2 Error: Unknown ACK on port " + serialPort
+			LOGFILE.write('State 2 Error: Unknown ACK on port '+serialPort+'\n')
 			communicating=False
 	##Trip data is being sent, get the string with data. First two characters describe what it is.	
 	elif (state==3):
@@ -258,34 +283,35 @@ while communicating:
 	##If the string was 'D.', we have received all trip data. If not, write to the file
 	elif (state==4):
 		if (response=='E.'):						#There was an error
-			print "State 4 Error: Error receiving trip on port " + serialPort
+			LOGFILE.write('State 4 Error: Error receiving trip on port '+serialPort+'\n')
 			communicating=False
 			flagError=True
 		elif (response.find('D.')!=-1):						#We are done communicating
 			communicating=False
 			flagError=False
 			writeToUSB(tripStrings)
-			print "Got done. Exiting."
+			LOGFILE.write('Got done. Exiting.'+'\n')
 		else:
 			sendString(response[:2]+'.')
 			strToFile=response+'\n'
 			tripStrings.append(strToFile)				#Added to the file.
 			state=3							#Go back to state 3 and get the next field
 	else:
-		print "Error processing state...out of bounds"
+		LOGFILE.write('Error processing state...out of bounds'+'\n')
 
 ##end while communicating
 	
 ##Now see if we need to send the trips, or delete something.
 if sendTrips is True:
-	print 'Sending trips'
+	LOGFILE.write('Sending trips'+'\n')
 	pid2=os.fork()
 	if pid2==0:		#child
 		args=['/home/root/Documents/beagle-bone.git/CommScripts/SendGAVR.py','-t','true','']
 		os.execv(args[0],args)
 	else:
 		os.waitpid(pid2,0)	
-	
+
+LOGFILE.close()	
 exit()
 
 

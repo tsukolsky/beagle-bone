@@ -95,4 +95,7 @@ case "$1" in
         ;;
 esac
 
+rc_exit
+
+
 

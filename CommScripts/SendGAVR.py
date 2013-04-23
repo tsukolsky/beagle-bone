@@ -52,14 +52,27 @@ baudRate=9600
 USBpath='/media/USB'
 VirtualPath='/ReCycle/Trips/'
 gpsPath='/ReCycle/gps/'
-log='/home/root/Documents/tmp/SendGAVRlog.txt'
-OF=open(log,'w')
+#Set up log file for output
+try:
+	IF=open('home/root/Documents/tmp/logs/SendGAVR/.info','r')
+except:
+	os.system('echo 0 > /home/root/Documents/tmp/logs/SendGAVR/.info')
+	IF=open('home/root/Documents/tmp/logs/SendGAVR/.info','r')
+
+lines=IF.readlines()
+IF.close()
+number=int(lines[0].rstrip().strip())
+theLog='/home/root/Documents/tmp/logs/SendGAVR/'+number+'.txt'
+number+=1
+echoCm='echo '+str(number)+' > /home/root/Documents/tmp/logs/SendGAVR/.info'
+os.system(echoCm)
+LOGFILE=open(theLog,'w')
 
 #### Send String Routine ####
 def sendString(STRING):
 	for char in STRING:
 		string= "Writing " + char
-		OF.write(string+'\n')
+		LOGFILE.write(string+'\n')
 		serPort.write(char)
 		time.sleep(300.0/1000.0)    #25 is good, 10 is too fast, misses it sometimes...
 #	print STRING
@@ -70,7 +83,7 @@ def getString(waitTime):
 	string=''
 	string+=serPort.read(serPort.inWaiting())
 	output='GOT:'+string+'\n'
-	OF.write(output)
+	LOGFILE.write(output)
 #	string=raw_input(">>")
 	return string
 
@@ -86,7 +99,7 @@ serPort = serial.Serial(
 try:
 	serPort.open()
 except: 
-	print "Error opening port" + serialPort
+	LOGFILE.write('Error opening port'+serialPort)
 	exit()
 
 ### Start functionality here ###
@@ -117,10 +130,10 @@ while communicating:
 		#If we got the 'A.', we got the right thing. Send trip data. OTherwise go to state 5 for Error.
 		if (response.find('A.')!=-1):
 			state=3
-			OF.write('Got initial A.\n')
+			LOGFILE.write('Got initial A.\n')
 		else:
 			state=5
-			OF.write('Error on initial A.\n')
+			LOGFILE.write('Error on initial A.\n')
 	elif (state==3):		
 		##Sending Trips to him. Read the Start Days, line 4, and Start Year line 5
 		for aFile in tripFiles:
@@ -135,7 +148,7 @@ while communicating:
 				response=getString(200.0/1000.0)
 				response.strip()
 				if (response.find('A.')==-1):
-					OF.write('Error on intermediate A.\n')
+					LOGFILE.write('Error on intermediate A.\n')
 					##Error on first send, go to state 5 and wait, then try again
 					sendString("E.")
 					state=5
@@ -153,13 +166,13 @@ while communicating:
 		communicating=False
 	elif (state==5):
 		##Error. Wait for 10 seconds then try aggain. Reset state and successful
-		OF.write("Error, waiting for next ask.\n")
+		LOGFILE.write("Error, waiting for next ask.\n")
 		communicating=False
 		successful=True			##reset to allow for new communication
 	else:
 		communicating=False
 		
-OF.close()
+LOGFILE.close()
 exit()
 		
 		
