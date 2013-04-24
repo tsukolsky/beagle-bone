@@ -59,10 +59,10 @@ for lines in infile.readlines():
 			#print 'Time:'+hms + ', Date:'+dmy
 			lat=splitLine[3]
 			#print lat[:2]+'.'+lat[2:4] + '/'+lat[5:]
-			latstring=str(float(lat[:2])+float(lat[2:4])/60+float(lat[5:])/3600)+','+splitLine[4]
+			latstring=str(float(lat[:2])+float(lat[2:5])/60)+splitLine[4]
 			log=splitLine[5]
 			#print lat+'...'+log			
-			logstring=str(float(log[:3])+float(log[3:5])/60+float(lat[6:])/3600)+','+splitLine[6]
+			logstring=str(float(log[:3])+float(log[3:6]))+splitLine[6]
 			writefile.write(hms+'\t'+dmy+'\t'+latstring+'\t'+logstring+'\n')
 
 writefile.close()
