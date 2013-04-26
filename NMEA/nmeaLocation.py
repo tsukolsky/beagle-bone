@@ -49,21 +49,24 @@ writefile = open(WRITEFILE,'w')
 for lines in infile.readlines():
 	itsHere=lines.find('GPRMC')
 	if (itsHere != -1):	#found it
-		splitLine=lines.split(',')
-		#As long as there isn't a NOFIX, manipulate data and place
-		if (splitLine[2] == 'A'):
-			time=splitLine[1]
-			date=splitLine[9]			
-			dmy=date[2:4]+','+date[:2]+',20'+date[4:6]
-			hms=str(int(time[:2])-5)+':'+time[2:4]+':'+time[4:6]		#converts from UTC to EST
-			#print 'Time:'+hms + ', Date:'+dmy
-			lat=splitLine[3]
-			#print lat[:2]+'.'+lat[2:4] + '/'+lat[5:]
-			latstring=str(float(lat[:2])+float(lat[2:5])/60)+splitLine[4]
-			log=splitLine[5]
-			#print lat+'...'+log			
-			logstring=str(float(log[:3])+float(log[3:6]))+splitLine[6]
-			writefile.write(hms+'\t'+dmy+'\t'+latstring+'\t'+logstring+'\n')
+		try:
+			splitLine=lines.split(',')
+			#As long as there isn't a NOFIX, manipulate data and place
+			if (splitLine[2] == 'A'):
+				time=splitLine[1]
+				date=splitLine[9]			
+				dmy=date[2:4]+','+date[:2]+',20'+date[4:6]
+				hms=str(int(time[:2])-5)+':'+time[2:4]+':'+time[4:6]		#converts from UTC to EST
+				#print 'Time:'+hms + ', Date:'+dmy
+				lat=splitLine[3]
+				#print lat[:2]+'.'+lat[2:4] + '/'+lat[5:]
+				latstring=str(float(lat[:2])+float(lat[2:])/60)+splitLine[4]
+				log=splitLine[5]
+				#print lat+'...'+log			
+				logstring=str(float(log[:3])+float(log[3:])/60)+splitLine[6]
+				writefile.write(hms+'\t'+dmy+'\t'+latstring+'\t'+logstring+'\n')
+		except:
+			print 'Bad string'
 
 writefile.close()
 
