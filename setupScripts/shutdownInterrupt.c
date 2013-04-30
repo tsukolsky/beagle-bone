@@ -10,7 +10,7 @@
 |--------------------------------------------------------------------------------
 | Revisions: 4/15: Initial build/take.
 |	     4/16: Added blocking. Should block when there we open the file, as long as it's set to rising > edge.
-|		   Changed to work with online script. This script works and is complete.
+|		   Changed to work with online script. This script works and is complete. Triggered by rising edge.
 |================================================================================
 | *NOTES:Polling example found at: http://bwgz57.wordpress.com/tag/beaglebone/
 \*******************************************************************************/
@@ -36,14 +36,13 @@ int main(){
 	pfd.events = POLLPRI;				//Urgent data--
 	pfd.revents = 0;
 	//Lead is what the current pin is set to, ready is how many times this guy has been activated.
-	int lead,lastLead,ready;
-	lastLead=get_lead(fd);
+	int lead,ready;
 	while (1) {
 		ready=poll(&pfd,1,-1);
 		if (pfd.revents != 0) {	//if an event happened and the pin is a 1, that means we got an interrupt from GAVR
 	//		printf("Got int\n");
 			lead=get_lead(fd);
-			if (lead==1 && lastLead==0){
+			if (lead==1){
 				char buffer[25];
 				time_t timer;
 				struct tm* tm_info;
@@ -55,7 +54,6 @@ int main(){
 			} else {
 	//			printf("Change, lead=%d, lastLead=%d\n",lead,lastLead);
 			}
-			lastLead=lead;
 		}
 	}
 	return 0;

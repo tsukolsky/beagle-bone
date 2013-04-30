@@ -1,12 +1,11 @@
 #!/usr/bin/python
 
-##Test script for GAVR
 ###############################################################
 ## ReceiveGAVR.py
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 4/8/2013
-## Last Revised: 4/15/2013
+## Last Revised: 4/23/2013
 ###############################################################
 ## Description:
 ##    This module is responisble for communication between the GAVR
@@ -19,6 +18,9 @@
 ##	      is done using arguments in tuple format. Does IO cahnging and
 ##	      moving when there is a delete. Can't delete current trip. Can't
 ## 	      offload the current trip. (2) FInished delete USBtrip file management 
+##  4/16->4/23- Minor changes to all code, implmented stripping of response string
+##		  and look for string match of key codes. If the specific string is a substring,
+##		  just print the substring because that's what we were supposed to get. 
 ###############################################################
 ## Changes to be made:
 ## 

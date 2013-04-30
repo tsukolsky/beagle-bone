@@ -1,5 +1,24 @@
 #!/bin/bash
+########################################################################
+## firstCall
+## Author: Todd Sukolsky
+## Copyright of Todd Sukolsky and ReCycle
+## Date Created: 4/21/13
+## Last Reviced: 4/23/13
+########################################################################
+## Description: This script is to be placed in /usr/bin and will be 
+## 	called by "bicycle.service" to start things on Boot
+########################################################################
+## Revisions:
+##		4/21-Initial Build
+##		4/23- Changed how the setupPath and gpsPath variabls are established.
+##				Moved everything to sub/background processes.
+########################################################################
+## Notes:
+########################################################################
 
+##This script is to be placed in /usr/bin and will be called by "bicycle.service" to start things on Boot
+## Author:
 setupPath=/home/root/Documents/beagle-bone.git/setupScripts/
 gpsPath=/home/root/Documents/beagle-bone.git/NMEA
 

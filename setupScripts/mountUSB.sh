@@ -1,12 +1,24 @@
 #!/bin/sh
-
-# Description: This bash script searches for a known USB drive and checks to see if it is mounted. If it's not mounted, it will mount it.
-# NOTE: You need to run this as root.
-# Author: Ben Paolillo
-# Date: 2/10/13
-
-# Revision by Todd Sukolsky:4/16/13- Added things from Ben's other scripts to format this in one. Checks for usb, if inserted, raise GPIO and wait for eject. Once eject, lower GPIO and wait for insert.
-# Revision by Todd SUkolsky:4/19-13- Debug messages now printed to system log. VIew with dmesg.
+########################################################################
+## mountUSB.sh
+## Author: Ben Paolillo
+## Copyright of ReCycle
+## Date Created: 2/10/13
+## Last Reviced: 4/19/13
+## Collaborator: Todd Sukolsky
+########################################################################
+## Description:
+##    This bash script searches for a known USB drive and checks to see 
+##	if it is mounted. If it's not mounted, it will mount it. Waits then
+##	for an unmount.
+##
+########################################################################
+## Revisions:
+##	4/16/13 (Todd Sukolsky)- Added things from Ben's other scripts to format this in one. 
+##							Checks for usb, if inserted, raise GPIO and wait for eject. 
+##							Once eject, lower GPIO and wait for insert.
+## 	4/19/13 (Todd Sukolsky)- Debug messages now printed to system log. VIew with dmesg.
+########################################################################
 
 clear
 

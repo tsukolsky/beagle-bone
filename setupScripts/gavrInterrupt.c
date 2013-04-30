@@ -35,16 +35,16 @@ int main(){
 	pfd.events = POLLPRI;
 	pfd.revents = 0;
 	//Lead is what the current pin is set to, ready is how many times this guy has been activated.
-	int lead,lastLead,ready;
-	lastLead=get_lead(fd);
+	int lead,ready;
 	while (1) {
 		ready = poll(&pfd, 1, -1);
 		printf("ready: %d\n", ready);
 		if (pfd.revents != 0) {	//if an event happened and the pin is a 1, that means we got an interrupt from GAVR
 			lead=get_lead(fd);
-			printf("Calling interrupt handler()");
-			handleInterrupt();
-			lastLead=lead;
+			if (lead==1){
+				printf("Calling interrupt handler()");
+				handleInterrupt();
+			}
 		}	
 	}
 	return 0;

@@ -1,9 +1,6 @@
 #!/usr/bin/python
-
-##Test script for softSetup
-#!/usr/bin/python
 ###############################################################
-## setup.py
+## SendWAVR.py
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky and Re.Cycle
 ## Date Created: 2/9/2013

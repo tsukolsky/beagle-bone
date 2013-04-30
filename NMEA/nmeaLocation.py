@@ -4,7 +4,7 @@
 ## Author: Todd Sukolsky
 ## Copyright of Todd Sukolsky
 ## Date Created: 2/9/2013
-## Last Revised: 3/31/2013
+## Last Revised: 4/24/2013
 ###############################################################
 ## Description:
 ## This script is the foundation for a NMEA string parser
@@ -23,6 +23,8 @@
 ## Revisions:
 ##	3/31- Changed string to catch from 'GGA' to 'GMRMC' because
 ##	      it has the date it it as well, along with LONG and LAT
+##  4/24- Changed the longitude and latitude parse/conversion, not /3600 for least
+##		  significant digits, but just /60.
 ###############################################################
 ## Kinds of NMEA (2.0) strings: (more info at http://www.gpsinformation.org/dale/nmea.htm)
 ## GPAPB: Auto Pilot B <not used>
@@ -62,7 +64,7 @@ for lines in infile.readlines():
 			latstring=str(float(lat[:2])+float(lat[2:5])/60)+splitLine[4]
 			log=splitLine[5]
 			#print lat+'...'+log			
-			logstring=str(float(log[:3])+float(log[3:6]))+splitLine[6]
+			logstring=str(float(log[:3])+float(log[3:6])/60)+splitLine[6]
 			writefile.write(hms+'\t'+dmy+'\t'+latstring+'\t'+logstring+'\n')
 
 writefile.close()

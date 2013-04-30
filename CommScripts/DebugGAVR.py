@@ -17,6 +17,10 @@
 ##	4/8-- Edited to match commWAVR parameters that have been
 ##	      proven to work. Must send time with beginning 'S'
 ##	      then two characters for each time param, date can be single.
+##  4/15- Changed script to communicate wtih GAVR over Debug Serial port.
+##		  No instrumental changes, just small implemntation of argument parsing
+##		  and how a no argument will be treated. If in debug, sends the string and
+##		  that's it, not any more complicated than that. Doesn't try and resend.
 ###############################################################
 ## Changes to be made:
 ##     
