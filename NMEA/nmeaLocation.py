@@ -69,7 +69,6 @@ for lines in infile.readlines():
 				writefile.write(hms+'\t'+dmy+'\t'+latstring+'\t'+logstring+'\n')
 		except:
 			print 'Bad string'
->>>>>>> a54870a449c9bb33e662b43f705ce04fefe8d634
 
 writefile.close()
 
